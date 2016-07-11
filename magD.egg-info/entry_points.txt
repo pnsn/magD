@@ -1,0 +1,3 @@
+[console_scripts]
+magD = magD.__main__:main
+
