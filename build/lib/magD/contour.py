@@ -134,17 +134,14 @@ class Contour:
      
         
         
-    #from self.contour create geojson obj
+    #from self.contour obj
     def make_geojson(self):
         geoj=self.geojson_stub()
         mls_obj=self.dim3_to_multilinestring(self.contours)
+        # print(mls_obj)
+        # is_valid(mls_obj)
         geoj['geometry']=mls_obj
         return geoj
-    
-    #write json_obj to 
-    def write_json_to_file(self, json_obj, path):
-        with open(path, 'w') as outfile:
-            json.dump(json_obj, outfile)
         
     def make_topojson(self, geojson):
         return True

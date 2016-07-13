@@ -91,6 +91,13 @@ class TestContour(unittest.TestCase):
         geoj =cn.make_geojson()
         self.assertTrue(json.dumps(geoj))
         
+    def test_write_json_to_file(self):
+        cn=Contour(self.json_in, self.levels)
+        geoj =cn.make_geojson()
+        self.assertTrue(cn.write_json_to_file(geoj, "../data/test/geotest.json"))
+        
+        
+        
         
         
 if __name__ == '__main__':
