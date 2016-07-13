@@ -34,10 +34,11 @@ def main(args=None):
     print(min_level)
     print(max_level)
     levels=[1,2,3,4,5]
-    contours=core.get_contours(lats,lons,counts,levels)
+    cn=core.make_contours(lats,lons,counts,levels)
+    contours =get_contour_verts(cn)
     # for contour in contours:
     #     print(len(contour))
-    geoj=core.geojson_multiline_string(contours,levels)
+    geoj=core.geojson_multiline_string(contours)
     pprint(len(geoj['geometries']))
     # topoj=core.geojson_to_topo_json(geoj, "data/topo_contours.js")
 

@@ -11,31 +11,31 @@ def parse_json_file(path):
 
 #accept lat(float), lon(float), vals(float), levels(array of contour vals)
 #return matplotlib contour obj
-# def make_mplot_contour(lats,lons,vals,levels):
-#     X, Y = np.meshgrid(lons, lats)
-#     # xyz.append([point['lat'], point['lon'], point['count']])
-#     Z= np.reshape(vals, (len(lats), len(lons)))
-#     # levels=list(range(1,11))
-#     return plt.contour(X,Y,Z, levels)
-#
-# #parse matplotlib contour obj from numpy obj to python list for geojson
-# def parse_mplot_contours(cn):
-#     # print [method for method in dir(cn.collections[0]) if callable(getattr(cn.collections[0], method))]
-#     contours = []
-#     # for each contour line
-#     for cc in cn.collections:
-#         paths = []
-#         # for each separate section of the contour line
-#         for pp in cc.get_paths():
-#             #path object
-#             # print(pp)
-#             xy = []
-#             # for each segment of that section
-#             for vv in pp.iter_segments():
-#                 xy.append(vv[0])
-#             paths.append(np.vstack(xy))
-#         contours.append(paths)
-#     return contours
+def make_mplot_contour(lats,lons,vals,levels):
+    X, Y = np.meshgrid(lons, lats)
+    # xyz.append([point['lat'], point['lon'], point['count']])
+    Z= np.reshape(vals, (len(lats), len(lons)))
+    # levels=list(range(1,11))
+    return plt.contour(X,Y,Z, levels)
+
+#parse matplotlib contour obj from numpy obj to python list for geojson
+def parse_mplot_contours(cn):
+    # print [method for method in dir(cn.collections[0]) if callable(getattr(cn.collections[0], method))]
+    contours = []
+    # for each contour line
+    for cc in cn.collections:
+        paths = []
+        # for each separate section of the contour line
+        for pp in cc.get_paths():
+            #path object
+            # print(pp)
+            xy = []
+            # for each segment of that section
+            for vv in pp.iter_segments():
+                xy.append(vv[0])
+            paths.append(np.vstack(xy))
+        contours.append(paths)
+    return contours
     
     #given python list, create geojson of multilinestrings
 #     def make_geojson(contours):

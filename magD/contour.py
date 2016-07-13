@@ -15,6 +15,11 @@ Parameterize attr names
 '''
 import matplotlib.pyplot as plt
 import numpy as np
+from geojson import MultiLineString, LineString, Point
+from pprint import pprint
+import json
+
+
 
 class Contour:
     def __init__(self, json_in, levels):
@@ -26,7 +31,7 @@ class Contour:
         self.contours = []
         self.levels=levels
         self.parse_json(json_in)
-        self.make_contours
+        self.parse_contours()
     
     def add_lat(self,lat):
         self.lats.append(lat)
@@ -42,6 +47,48 @@ class Contour:
         
     def set_max_val(self,val):
        self.max_level=val
+    
+    #takes lon, lat and return geojson Point
+    def coords_to_point(self, lat, lon):
+        return Point((float(lon),float(lat)))
+    
+    #takes 2dim list of lng,lats and returns LineString
+    #iterate through for to ensure lists and not np objects
+    def dim2_to_linestring(self, points):
+        coords=[]
+        for point in points:
+            if "tolist" in dir(point):
+                point =point.tolist()
+            coords.append(point)
+        return LineString(coords)
+    
+    #takes list of lineStrings and returns MultiLineString
+    def dim3_to_multilinestring(self, linestrings):
+        lines=[]
+        index=0
+        for line in linestrings:
+            if len(line)>0:
+                if "tolist" in dir(line):
+                    line=line.tolist()
+                coords=[]
+                for point in line:
+                    if "tolist" in dir(point):
+                        point =point.tolist()
+                    coords.append(point)
+                lines.append(coords)
+                index +=1
+            else:
+                #remove this level from levels
+                del self.levels[index]
+        return MultiLineString(lines)        
+    
+    def geojson_stub(self):
+        return  json.loads('{"type": \
+                                "GeometryCollection", \
+                                "features": \
+                                    [{"type": "Feature", \
+                                    "geometry": {} \
+                            }]}')
   
     #read json data and populate attrs
     def parse_json(self, data):
@@ -49,36 +96,55 @@ class Contour:
           if point['count'] > self.max_level:
               self.set_max_val(point['count'])
           if point['count']< self.min_level:
-              self.set_max_val(point['count'])
+              self.set_min_val(point['count'])
           self.add_val(point['count'])
-          self.add_lat(point['lat'])
-          self.add_lon(point['lng'])
-          
+          if point['lat'] not in self.lats:
+              self.add_lat(point['lat'])
+          if point['lng'] not in self.lons:
+              self.add_lon(point['lng'])
     
-    def make_contours(self):
+    #create 4 dim array of contours (self.contours)
+    #[ #countours
+        #[ contour 
+            #[ #segment of contour
+                #[lon,lat] #points
+                #...
+            #] 
+            #...
+        #]
+        #...
+    #]
+    def parse_contours(self):
         # print [method for method in dir(cn.collections[0]) if callable(getattr(cn.collections[0], method))]
-        X, Y = np.meshgrid(self.lons, self.lats)        
-        # xyz.append([point['lat'], point['lon'], point['count']])
-        Z= np.reshape(vals, (len(self.lats), len(self.lons)))
-        # levels=list(range(1,11))
-        cn= plt.contour(X,Y,Z, self.levels)
-        for cc in cn.collections:
+        X, Y = np.meshgrid(self.lons, self.lats)
+        Z= np.reshape(self.vals, (len(self.lats), len(self.lons)))
+        contours= plt.contour(X,Y,Z, self.levels)
+        for contour in contours.collections:
             paths = []
             # for each separate section of the contour line
-            for pp in cc.get_paths():
+            for path in contour.get_paths():
                 #path object
-                # print(pp)
                 xy = []
                 # for each segment of that section
-                for vv in pp.iter_segments():
+                for vv in path.iter_segments():
                     xy.append(vv[0])
-                paths.append(np.vstack(xy))
+                #save np as python list
+                paths.append(np.vstack(xy).tolist())
             self.contours.append(paths)
+     
         
         
+    #from self.contour obj
+    def make_geojson(self):
+        geoj=self.geojson_stub()
+        mls_obj=self.dim3_to_multilinestring(self.contours)
+        # print(mls_obj)
+        # is_valid(mls_obj)
+        geoj['geometry']=mls_obj
+        return geoj
         
-        
-    # def parse_mplot_contours(self):
+    def make_topojson(self, geojson):
+        return True
 
       # for each contour line
       
