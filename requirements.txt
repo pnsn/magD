@@ -1,4 +1,6 @@
+--index-url https://pypi.python.org/simple/
 numpy
 matplotlib
 geojson
 geobuf
+-e git://github.com/pnsn/topojson.py.git#egg=topojson

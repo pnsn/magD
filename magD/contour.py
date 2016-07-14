@@ -15,9 +15,12 @@ Parameterize attr names
 '''
 import matplotlib.pyplot as plt
 import numpy as np
-from geojson import MultiLineString, LineString, Point
 from pprint import pprint
 import json
+from topojson import topojson
+from geojson import MultiLineString, LineString, Point
+
+
 
 
 
@@ -146,8 +149,8 @@ class Contour:
         with open(path, 'w') as outfile:
             json.dump(json_obj, outfile)
         
-    def make_topojson(self, geojson):
-        return True
+    def make_topojson(self, geojson, path):
+        return topojson(geojson, path)
 
       # for each contour line
       

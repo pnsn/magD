@@ -1,6 +1,5 @@
 import unittest
 # import numpy as np
-from geojson import is_valid
 import sys, os
 sys.path.append(os.path.abspath('..'))
 from MagD.core import parse_json_file
@@ -8,6 +7,10 @@ from MagD.contour import Contour
 from pprint import pprint
 import numpy as np
 import json
+from topojson import topojson
+from geojson import is_valid
+
+
 
 
 class TestContour(unittest.TestCase):
@@ -89,12 +92,21 @@ class TestContour(unittest.TestCase):
         """Test creation of geojson obj with MultilineString obj"""
         cn=Contour(self.json_in, self.levels)
         geoj =cn.make_geojson()
+        self.assertEqual(geoj['geometry']['type'],"MultiLineString")
         self.assertTrue(json.dumps(geoj))
+        
         
     def test_write_json_to_file(self):
         cn=Contour(self.json_in, self.levels)
         geoj =cn.make_geojson()
-        self.assertTrue(cn.write_json_to_file(geoj, "../data/test/geotest.json"))
+        path="../data/test/geotest.json"
+        self.assertEqual(cn.write_json_to_file(geoj, path), None)
+    
+    def test_make_topojson(self):
+        cn=Contour(self.json_in, self.levels)
+        pathin="../data/test/geotest.json"
+        pathout = "../data/test/topotest.json"
+        topo =cn.make_topojson(pathin, pathout)
         
         
         

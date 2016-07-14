@@ -9,7 +9,6 @@ setup(name='magD',
           "geojson",
           "geobuf",
       ],
-      dependency_links=["https://github.com/calvinmetcalf/topojson.py/tarball/master#egg=topojson"],
       entry_points={
           'console_scripts': [
               'magD = magD.__main__:main'
