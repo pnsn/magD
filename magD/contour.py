@@ -17,8 +17,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pprint import pprint
 import json
-from topojson import topojson
-from geojson import MultiLineString, LineString, Point
 
 
 
@@ -51,20 +49,6 @@ class Contour:
     def set_max_val(self,val):
        self.max_level=val
     
-    #takes lon, lat and return geojson Point
-    def coords_to_point(self, lat, lon):
-        return Point((float(lon),float(lat)))
-    
-    #takes 2dim list of lng,lats and returns LineString
-    #iterate through for to ensure lists and not np objects
-    def dim2_to_linestring(self, points):
-        coords=[]
-        for point in points:
-            if "tolist" in dir(point):
-                point =point.tolist()
-            coords.append(point)
-        return LineString(coords)
-    
     #takes 4dim list of contours for matplotlib and builds GeometryCollection
     #the numpy arrays need to be converted to python lists before conversion
     #{"type": "GeometryCollection"
@@ -78,7 +62,10 @@ class Contour:
     #                      ], 
     #                           [x,y], [x,y]....
     #                      ]
-    #                    ]
+    #                    ],
+    #                  "properties":{
+    #                     "level": contour_val 
+    #                  }
     #             },
     #             {
     #                 "type": "MultiLineString",
@@ -89,7 +76,10 @@ class Contour:
     #                      ], 
     #                           [x,y], [x,y]....
     #                      ]
-    #                    ]
+    #                    ],
+    #                  "properties":{
+    #                     "level": contour_val 
+    #                  }
     #             }
     #     ]
     #
@@ -99,7 +89,13 @@ class Contour:
         index=0
         for contour in self.matplotlib_contours:
             if len(contour)>0:
-                geocol["geometries"].append(MultiLineString(contour))
+                mls={'type': 'MultiLineString'
+                      ,'coordinates': contour
+                      ,'properties': {
+                        'level': str(self.levels[index])
+                      } 
+                    }
+                geocol["geometries"].append(mls)
                 index +=1
             else:
                 #remove this level from levels
@@ -157,6 +153,3 @@ class Contour:
     def write_json_to_file(self, json_obj, path):
         with open(path, 'w') as outfile:
             json.dump(json_obj, outfile, indent=4)
-        
-    def make_topojson(self, geojson, path):
-        return topojson(geojson, path)      
