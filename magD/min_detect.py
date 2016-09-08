@@ -2,6 +2,11 @@ import xml.etree.ElementTree as etree
 import xml.etree.cElementTree as ET
 import urllib2
 import math
+import sys
+import os
+import json
+import contour
+sys.path.append(os.path.abspath('..'))
 
 station_freq = 0
 mindetect = 0
@@ -33,7 +38,6 @@ def find_station_codes():
 
             station_coordinates = [lat, lon]
             station_codes.append(station_coordinates)
-            #print station_codes
     return station_codes
 
 
@@ -46,14 +50,10 @@ def find_station(code):
     buckets = ""
     url = ''.join(["http://service.iris.edu/mustang/noise-pdf/1/query?net=", network, "&sta=", code,
                    "&loc=*&cha=" + chanel + "&quality=M&format=xml"])
-    # if urllib2.URLERROR:
-    #     print urllib2.URLERROR.reason
-    # else:
     xml_file = urllib2.urlopen(url)
     tree2 = ET.parse(xml_file)
     root2 = tree2.getroot()
     buckets = root2.findall("Histogram")[0].getchildren()
-
     return buckets
 
 
@@ -99,7 +99,7 @@ def create_station_object(nyquist):
     return station_objects
 
 
-# print station_xml_files[0]
+
 # http://service.iris.edu/mustang/noise-pdf/1/query?net=UW&sta=BRAN&loc=--&cha=BHZ&quality=M&format=xml
 
 # Calculates the distance between two locations with a lat/lon
@@ -113,7 +113,6 @@ def distance(origin, destination):
         math.radians(lat2)) * math.pow(math.sin(dlon / 2),2)
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     d = radius * c
-
     return d
 
 
@@ -189,17 +188,12 @@ def magnitude_signal_adjustment(signal_adjuments_values,Mw):
 
 # Calculates the min
 def min_detect(db, code, Mw,station_freq):
-    #print station_objects[code][2]
-    #print code
 
     number_frequencies = len(station_objects[code][2])
     for number in range(number_frequencies - 2):
         if station_objects[code][2][number] and station_objects[code][2][number + 1]:
             freq1 = station_objects[code][2][number][0]
             freq2 = station_objects[code][2][number + 1][0]
-
-            #         print str(station_objects[1]) + "/n"
-            #         print station_objects[1][number + 1][0]
             if station_freq >= freq1 and station_freq <= freq2:
                 stafc_db90 = station_objects[code][2][number][1]
                 vel_stafc_db90 = stafc_db90-(20*math.log10(station_freq*2*math.pi))
@@ -230,10 +224,10 @@ signal_adjuments_values = {
     5.0: [1.5, 1.3, 1.2, 1.1, 1.0, 0.9, 0.9, 0.8, 0.7, 0.7, 0.7, 0.6, 0.6, 0.5, 0.5, 0.3]
 }
 
-# def at_each_location():
-#     i = 8
 station_objects = create_station_object(15)
 mindetect_matrix = []
+data = {}
+points = []
 # Calculates the minimum detection.
 i = 42  # i is lattitude.
 lat_index = 0
@@ -244,7 +238,7 @@ while i <= 49:
         all_mindetect = []
         #codes = station_objects.keys()
         codes = ["RATT"]
-        #print codes
+
         # Goes through all the stations.
         for code in codes:
             start_period = 0.005
@@ -281,35 +275,51 @@ while i <= 49:
                 db = amplitude_power_conversion(Amplitude)
 
                 mindetect = min_detect(db,code,Mw,station_freq)
-                #print mindetect
-                # /* printf(" HERE    %f %f %f\n", db, fc, mindetect[i]);*/
 
-                #print mindetect
+                # /* printf(" HERE    %f %f %f\n", db, fc, mindetect[i]);*/
                 if(mindetect):
                     station_objects[code].append(Mw)
                     all_mindetect.append(Mw)
                     break
-                period = period * (2 ** 0.125)
-        mindetect_matrix.append(all_mindetect)
-        lon_index = lon_index + 1
-        j = j + .1
-    lat_index = lat_index + 1
-    i = i + .1
 
+                period = period * (2 ** 0.125)
+        all_mindetect.sort()
+        mindetect_matrix.append(all_mindetect)
+        value = all_mindetect[0]
+        point = {
+            "lat": i,
+            "lng": j,
+            "count": value
+        }
+        points.append(point)
+        data['points'] = points
+        lon_index = lon_index + 1
+        j = j + 0.5
+    lat_index = lat_index + 1
+    i = i + 0.5
+print data
 total_number = 0
 sum = 0
-min = mindetect_matrix[0][0]
-max = mindetect_matrix[0][0]
-for array in mindetect_matrix:
-    number = array[0]
-    total_number = total_number + 1
-    sum = sum + number
-    if(number < min):
-        min = number
-    if(number > max):
-        max = number
+# data['points'] = points
+# min = mindetect_matrix[0][0]
+# max = mindetect_matrix[0][0]
 
-average = sum/float(total_number)
-print "Min: " + str(min) + " Max: " + str(max) + " Average: " + str(average)
+# for array in mindetect_matrix:
+#     number = array[2]
+#     total_number = total_number + 1
+#     sum = sum + number
+#     if(number < min):
+#         min = number
+#     if(number > max):
+#         max = number
+#
+# average = sum/float(total_number)
+# print "Min: " + str(min) + " Max: " + str(max) + " Average: " + str(average)
+levels = [1.0,1.5,2.0,2.3,2.5,2.7,3.0,3.3,3.6,4.0,4.5, 5.0,5.5,6.0,6.5,7.0,7.3,7.6,8.0,8.5,9.0]
+# print data['points']['count']
+c  = contour.Contour(data,levels)
+geocol = c.build_geometry_collection()
+c.write_json_to_file(geocol, "../test/data/contours.json")
+# c.write_json_to_file(c,)
 #for code in station_objects.keys():
     #print code + " " + str(station_objects[code][3])
