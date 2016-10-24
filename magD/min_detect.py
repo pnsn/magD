@@ -236,8 +236,8 @@ while i <= 49:
     j = -125  # j is longitude
     while j <= -117:
         all_mindetect = []
-        #codes = station_objects.keys()
-        codes = ["RATT"]
+        codes = station_objects.keys()
+        #codes = ["RATT"]
 
         # Goes through all the stations.
         for code in codes:
@@ -298,9 +298,10 @@ while i <= 49:
     lat_index = lat_index + 1
     i = i + 0.5
 print data
+print len(codes)
 total_number = 0
 sum = 0
-# data['points'] = points
+
 # min = mindetect_matrix[0][0]
 # max = mindetect_matrix[0][0]
 
@@ -315,11 +316,8 @@ sum = 0
 #
 # average = sum/float(total_number)
 # print "Min: " + str(min) + " Max: " + str(max) + " Average: " + str(average)
-levels = [1.0,1.5,2.0,2.3,2.5,2.7,3.0,3.3,3.6,4.0,4.5, 5.0,5.5,6.0,6.5,7.0,7.3,7.6,8.0,8.5,9.0]
+levels = [1.0,1.5,2.0,2.5,3.0,3.3,3.5,3.8,4.0,4.3,4.6,5.0,5.5,6.0]
 # print data['points']['count']
 c  = contour.Contour(data,levels)
 geocol = c.build_geometry_collection()
 c.write_json_to_file(geocol, "../test/data/contours.json")
-# c.write_json_to_file(c,)
-#for code in station_objects.keys():
-    #print code + " " + str(station_objects[code][3])
