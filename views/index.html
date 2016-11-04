@@ -53,7 +53,7 @@ var layer = new L.StamenTileLayer("toner");
 
 var map = new L.Map("map", {
       center: [47.67, -119.3],
-  zoom: 7
+      zoom: 7
     })
     .addLayer(layer);
 
@@ -69,7 +69,6 @@ d3.json("js/topo.json", function(topology) {
       .enter()
       .append("path")
       .style("fill", function(d) { 
-              console.log(d); 
               return color(d.properties.level); 
       });
 

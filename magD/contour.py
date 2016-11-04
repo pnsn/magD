@@ -1,5 +1,5 @@
 '''
-Class to read points from a json obj of form:
+Class to read points from python dict obj of form:
 ...
 points:{
     point{
@@ -9,7 +9,7 @@ points:{
     }
 }
 
-And creates geojson or topojson of contour lines
+And create geojson and  topojson of contour lines
 TODO:
 Parameterize attr names
 '''
@@ -19,11 +19,8 @@ from pprint import pprint
 import json
 
 
-
-
-
 class Contour:
-    def __init__(self, json_in, levels):
+    def __init__(self, data, levels):
         self.min_level=None
         self.max_level=None
         self.lats =[]
@@ -31,7 +28,7 @@ class Contour:
         self.vals=[]
         self.matplotlib_contours = []
         self.levels=levels
-        self.parse_json(json_in)
+        self.setAttrs(data)
         self.parse_contours()
     
     def add_lat(self,lat):
@@ -103,8 +100,9 @@ class Contour:
         return geocol
     
 
-    #read json data and populate attrs
-    def parse_json(self, data):
+    #read data obj and populate attrs
+    
+    def setAttrs(self, data):
       for point in data["points"]:
           if point['count'] > self.max_level:
               self.set_max_val(point['count'])
