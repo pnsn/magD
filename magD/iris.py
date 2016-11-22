@@ -71,11 +71,10 @@ def create_station_pdf_modes(nyquist, sta, chan, net):
         if samples is not None:
           mode = float(samples[0].attrib["hits"])
           power = float(samples[0].attrib["power"])
-          freq=float(samples[0].attrib["freq"])
+          freq=float(samples[0].attrib["freq"]) 
           freq0=freq
-          base=float(samples[1].attrib["freq"])/freq0
-          
-          modes = [] 
+          base=None
+          modes = []
           # creates a station object that contains freq pairs with the mode/power
           for sample in samples:
               freq2 = float(sample.attrib["freq"])
@@ -84,12 +83,14 @@ def create_station_pdf_modes(nyquist, sta, chan, net):
                   mode = int(sample.attrib["hits"])
                   power = int(sample.attrib["power"])
               else:
+                  #we want freq1 to determine base
+                  if freq==freq0:
+                      base=freq2/freq0
                   modes.append(power)
-                  
                   freq = freq2
                   mode = int(sample.attrib["hits"])
                   power = int(sample.attrib["power"])
-          pdf_modes[sta] = {'nyquist': nyquist, 'cords': (station['lat'],station['lon']), 'modes': modes, 'freq0:' freq0, 'base:' base}
+          pdf_modes[sta] = {'nyquist': nyquist, 'cords': (station['lat'],station['lon']), 'modes': modes, 'freq0': freq0, 'base': base}
       
     return pdf_modes
          

@@ -108,27 +108,19 @@ sta_fc=nyqist or station adjusted value
 # ratio = freqs[0]/freqs[1]
 # start_frequency* (ratio)^index
 #so index= log of base ratio to the (freq/freqs[0])
-def get_frequency_index(freq, freq0, ratio):
-    print freq
-    print freq0
-    return int(round(math.log(freq/freq0, ratio)))
+def get_frequency_index(freq, freq0, base):
+    return int(round(math.log(freq/freq0, base)))
     
     
 def min_detect(db, sta, Mw, station_freq, station_objects):
-    number_frequencies = len(station_objects[sta]["modes"])
-    for i in range(number_frequencies - 1):
-        if station_objects[sta]['modes'][i] and station_objects[sta]['modes'][i + 1]:
-            freq1 = station_objects[sta]['modes'][i][0]
-            freq2 = station_objects[sta]['modes'][i + 1][0]
-            if station_freq >= freq1 and station_freq < freq2:
-                stafc = station_objects[sta]['modes'][i][1]
-                vel_stafc = stafc -(20*math.log10(station_freq*2*math.pi))
-                if stafc < -170:
-                    vel_stafc = -99.1111
-                    stafc = -99.1111
+    index=get_frequency_index(station_freq, station_objects[sta]['freq0'],station_objects[sta]['base'])
+    stafc = station_objects[sta]['modes'][index]
+    vel_stafc = stafc -(20*math.log10(station_freq*2*math.pi))
+    if stafc < -170:
+        vel_stafc = -99.1111
+        stafc = -99.1111
 
-                if db >= vel_stafc:
-                    mindetect = Mw
-                    # station_objects[sta].append(mindetect)
-                    return True
+    if db >= vel_stafc:
+        mindetect = Mw
+        return True
     return False

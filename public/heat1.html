@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test Heat1 Map</title>
+	<meta charset="utf-8" />
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	
+	<!--[if lte IE 8]><link rel="stylesheet" href="../dist/leaflet.ie.css" /><![endif]-->
+
+	<style>
+	
+#map {
+  width: 960px;
+  height: 1500px;
+}
+
+
+	</style>
+</head>
+<body>
+	<div id="map"></div>
+
+
+
+  <link rel="stylesheet" href="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.css" />
+  <script src="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.js"></script>  
+  <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.1"></script>
+  <script src="http://code.jquery.com/jquery-1.10.0.js"></script>
+  <script src="./js/heatmap.min.js"></script>
+  <script src="./js/leaflet-heatmap.js"></script>
+  
+  
+	<script type="text/javascript">
+  var filename="./js/heatmap.json"
+  var cfg = {
+    // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+    // if scaleRadius is false it will be the constant radius used in pixels
+    "radius": 15,
+    "maxOpacity": .8, 
+    // scales the radius based on map zoom
+    // "scaleRadius": true,
+    // if set to false the heatmap uses the global maximum for colorization
+    // if activated: uses the data maximum within the current map boundaries 
+    //   (there will always be a red spot with useLocalExtremas true)
+    // "useLocalExtrema": true,
+    // which field name in your data represents the latitude - default "lat"
+    latField: 'lat',
+    // which field name in your data represents the longitude - default "lng"
+    lngField: 'lon',
+    // which field name in your data represents the data value - default "value"
+    valueField: 'count'
+  };
+    
+  var heatmapLayer = new HeatmapOverlay(cfg);
+  var baseLayer = new L.StamenTileLayer("toner");  
+  var map = new L.Map("map", {
+        center: [43, -120],
+        zoom: 7,
+        layers: [baseLayer,heatmapLayer]
+      });
+
+
+  
+  $.ajax({
+  dataType: "json",
+  url: filename,
+  success: function(data) {
+    heatData={
+      max: 2.5,
+      data: data['coordinates']
+    };
+    heatmapLayer.setData(heatData);
+  }
+  }).error(function() {});
+
+
+	</script>
+</body>
+</html>

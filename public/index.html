@@ -13,7 +13,7 @@
 	
 #map {
   width: 960px;
-  height: 500px;
+  height: 1500px;
 }
 
 path {
@@ -52,49 +52,111 @@ var color = d3.scale.linear()
 var layer = new L.StamenTileLayer("toner");
 
 var map = new L.Map("map", {
-      center: [47.67, -119.3],
+      center: [42.67, -119.3],
       zoom: 7
     })
     .addLayer(layer);
 
-var svg = d3.select(map.getPanes().overlayPane).append("svg"),
-    g = svg.append("g").attr("class", "leaflet-zoom-hide");
+var svg = d3.select(map.getPanes().overlayPane).append("svg");
+var  g = svg.append("g").attr("class", "leaflet-zoom-hide");
 
-d3.json("js/topo.json", function(topology) {
-  var bounds = d3.geo.bounds(topojson.object(topology, topology.objects.contours)),
-      path = d3.geo.path().projection(project);
+var contourStyle = {
+    "color": "#ff0000",
+    "weight": 20,
+    "opacity": 0.65
+};
 
+var color = d3.scale.linear()
+            .domain([0, 1, 2])
+            .range(["#57b5cd", "#81b562", "#eb8d5d"]);
+
+
+var contourLayer=L.geoJson().addTo(map);
+d3.json("js/contours.json", function(collection) {
+
+  var transform = d3.geo.transform({point: projectPoint})
+  var path = d3.geo.path().projection(transform);
   var feature = g.selectAll("path")
-      .data(topojson.object(topology, topology.objects.contours).geometries)
-      .enter()
-      .append("path")
-      .style("fill", function(d) { 
-              return color(d.properties.level); 
-      });
+          .data(collection.geometries)
+          .enter()
+          .append("path")
+          .style("fill", function(d) { 
+                  return color(d.properties.level); 
+          });
 
-  map.on("viewreset", reset);
-  reset();
+          
+          
+          
+    map.on("viewreset", reset);
+   reset();
+   // Reposition the SVG to cover the features.
+   function reset() {
+     var bounds = path.bounds(collection)
+     var topLeft = bounds[0];
+     var bottomRight = bounds[1];
+      svg.attr("width", bottomRight[0] - topLeft[0])
+        .attr("height", bottomRight[1] - topLeft[1])
+        .style("left", topLeft[0] + "px")
+        .style("top", topLeft[1] + "px");
+       g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
+       //apply a class with the 'handle' value from the geojson file
+       feature.attr("class", function (d) {
+           return "code " + d.handle;
+       });
+       feature.attr("d", path);
+   }
+   // Use Leaflet to implement a D3 geometric transformation.
+   function projectPoint(x, y) {
+       var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+       this.stream.point(point.x, point.y);
+   }
 
-  // Reposition the SVG to cover the features.
-  function reset() {
-    var bottomLeft = project(bounds[0]),
-        topRight = project(bounds[1]);
 
-    svg.attr("width", topRight[0] - bottomLeft[0])
-       .attr("height", bottomLeft[1] - topRight[1])
-       .style("margin-left", bottomLeft[0] + "px")
-       .style("margin-top", topRight[1] + "px");
- 
-    g.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
 
-    feature.attr("d", path);
-  }
-
-  // Use Leaflet to implement a D3 geographic projection.
-  function project(x) {
-    var point = map.latLngToLayerPoint(new L.LatLng(x[1], x[0]));
-    return [point.x, point.y];
-  }
+  // console.log(collection.geometries);
+  
+//   collection.geometries.forEach(function(d){
+//     contourLayer.addData(d,{
+//       style: {
+//     "color": "#ff0000",
+//     // "weight": 20,
+//     // "opacity": 0.65
+// }
+    // }).addTo(map);
+  // });
+  
+  
+  // var feature = g.selectAll("path")
+  //     .data(topojson.object(topology, topology.objects.contours).geometries)
+  //     .enter()
+  //     .append("path")
+  //     .style("fill", function(d) {
+  //             return color(d.properties.level);
+  //     });
+  //
+  // map.on("viewreset", reset);
+  // reset();
+  //
+  // // Reposition the SVG to cover the features.
+  // function reset() {
+  //   var bottomLeft = project(bounds[0]),
+  //       topRight = project(bounds[1]);
+  //
+  //   svg.attr("width", topRight[0] - bottomLeft[0])
+  //      .attr("height", bottomLeft[1] - topRight[1])
+  //      .style("margin-left", bottomLeft[0] + "px")
+  //      .style("margin-top", topRight[1] + "px");
+  //
+  //   g.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
+  //
+  //   feature.attr("d", path);
+  // }
+  //
+  // // Use Leaflet to implement a D3 geographic projection.
+  // function project(x) {
+  //   var point = map.latLngToLayerPoint(new L.LatLng(x[1], x[0]));
+  //   return [point.x, point.y];
+  // }
 });
 
 	</script>

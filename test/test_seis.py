@@ -40,15 +40,22 @@ class TestSeis(unittest.TestCase):
         self.assertEqual(sav, 0.3)
         
         
-    def test_mode_indexing(self):
+    def test_power_indexing(self):
         """should return correct index using logs"""
-        expected_index=20
-        test_freq=seis_data.freq_modes[expected_index][0]
-        ratio = seis_data.freq_modes[1][0]/seis_data.freq_modes[0][0]
-        print ratio
-        test_index=seis.get_frequency_index(test_freq,seis_data.freq_modes[0][0], ratio)
-        self.assertEqual(expected_index,test_index)
-        self.assertEqual(seis_data.modes[test_index],seis_data.freq_modes[test_index][1])
+        freq0=seis_data.freq_modes[0][0]
+        base = seis_data.freq_modes[1][0]/freq0
+        for i in range(len(seis_data.freq_modes)):
+            test_freq=seis_data.freq_modes[i][0]
+            test_index=seis.get_frequency_index(test_freq,seis_data.freq_modes[0][0], base)
+            self.assertEqual(i,test_index)
+            self.assertEqual(seis_data.modes[test_index],seis_data.freq_modes[test_index][1])
+        
+        #now test where frequencies are close but not=
+        for i in range(len(seis_data.freq_modes)):
+            test_freq=seis_data.freq_modes[i][0] 
+            test_freq+=test_freq/100
+            test_index=seis.get_frequency_index(test_freq,seis_data.freq_modes[0][0], base)
+            self.assertEqual(i,test_index)
         
     
     
