@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Test Contour</title>
+	<title>Test Heat Map</title>
 	<meta charset="utf-8" />
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,19 +16,6 @@
   height: 1500px;
 }
 
-path {
-  fill-opacity: .6;
-  stroke: #000;
-  stroke-opacity: .6;
-  stroke-width: .5px;
-}
-
-path:hover {
-  //fill-opacity: .7;
-  stroke: #000;
-  stroke-opacity: 1;
-  stroke-width: 1.5px;
-}
 
 	</style>
 </head>
@@ -38,126 +25,119 @@ path:hover {
 
 
   <link rel="stylesheet" href="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.css" />
-  <script src="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.js"></script>
-  
-	
-  <script src="http://d3js.org/d3.v3.min.js"></script>
-  <script src="http://d3js.org/topojson.v0.min.js"></script>
+  <script src="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.js"></script>  
   <script type="text/javascript" src="http://maps.stamen.com/js/tile.stamen.js?v1.2.1"></script>
+  <script src="http://code.jquery.com/jquery-1.10.0.js"></script>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="js/marchingsquares-isobands.min.js"></script>
+	<script src="js/cubehelix.js"></script>
+  
+  
+  
 	<script type="text/javascript">
-var color = d3.scale.linear()
-            .domain([10000, 50000, 100000])
-            .range(["#57b5cd", "#81b562", "#eb8d5d"]);
 
-var layer = new L.StamenTileLayer("toner");
+  var layer = new L.StamenTileLayer("toner");
 
-var map = new L.Map("map", {
-      center: [42.67, -119.3],
-      zoom: 7
+  var map = new L.Map("map", {
+        center: [43, -120],
+        zoom: 7
+      })
+      .addLayer(layer);
+  map._initPathRoot();
+  
+  
+  var svg = d3.select("#map").select("svg");
+  var g = svg.append("g").attr("class", "leaflet-zoom-hide")//.attr('opacity', 0.8);
+  
+  var defaultContourColor = 'white';
+  var defaultContourWidth = 1;
+
+  // var colors = d3.scale.cubehelix().domain([0,4]);
+  // var colors = d3.scale.linear().domain([-1,1,3]).range(['#ffeda0',"#feb24c",'#f03b20']);
+  var colors = d3.scale.linear().domain([-1,3]).range(['green', 'red']);
+  
+  bands=[]
+  d3.json("js/magDgrid.json", function(data) {
+    var l=-5;
+    var mags= [-0.5, -0.75, 0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0 ];
+    // var mags= [-0.5, 0,  0.5,  1.0,  1.5, 2.0, 2.5, 3.0];
+    
+    for(var i=0; i< mags.length-1; i++){
+      var isoband=MarchingSquaresJS.IsoBands(data.grid,mags[i], mags[i+1]);
+      for(var j=0;j<isoband.length;j++){
+        var band=[];
+        var pen = "M";
+        for(var k=0;k<isoband[j].length; k++){
+          // console.log(Math.round(isoband[j][k][0])+ ": " + Math.round(isoband[j][k][1]));
+          var lat=data.lat_start + isoband[j][k][1]*data.lat_step;
+          var lon=isoband[j][k][0]*data.lon_step + data.lon_start;
+          band.push([pen,lat,lon]);
+          pen = "L"
+        }
+        if( band !==undefined && band.length> 1){
+          band.level=mags[i];
+          bands.push(band);
+        }
+        
+      }
+    }
+
+    // bands.sort(function(a,b) {
+    //     return b.level - a.level;
+    // });
+    
+    
+        
+    
+    var transform = d3.geo.transform({
+        point: projectPoint
+    });
+    var path = d3.geo.path().projection(transform);
+
+    
+    var contourPath = g.selectAll("path")
+    .data(bands)
+    .enter().append("path")
+    .style("fill", function(d, i) { return colors(d.level);})
+    .style("stroke", defaultContourColor)
+    .style('stroke-width', defaultContourWidth)
+    .style('opacity', .6)
+    .on('mouseover', function(d) {
+        d3.select(this).style('stroke', 'black');
+        // d3.select(this).style('opacity',.9);
+        console.log(d3.select(this).attr('level'));
     })
-    .addLayer(layer);
+    .on('mouseout', function(d) {
+        d3.select(this).style('stroke', defaultContourColor);
+        d3.select(this).style('opacity', .6);
+        
+    });
+    // drawLegend();
+    
+    function reset() {
+      contourPath.attr("level", function(d){
+        return d.level;
+      });
+      
+        contourPath.attr("d", function(d) {
+            var pathStr = d.map(function(d1) {
+              var point = map.latLngToLayerPoint(new L.LatLng(d1[1], d1[2]));
+                return d1[0] + point.x + "," + point.y;
+            }).join('');
+            return pathStr;
+        });                          
 
-var svg = d3.select(map.getPanes().overlayPane).append("svg");
-var  g = svg.append("g").attr("class", "leaflet-zoom-hide");
-
-var contourStyle = {
-    "color": "#ff0000",
-    "weight": 20,
-    "opacity": 0.65
-};
-
-var color = d3.scale.linear()
-            .domain([0, 1, 2])
-            .range(["#57b5cd", "#81b562", "#eb8d5d"]);
-
-
-var contourLayer=L.geoJson().addTo(map);
-d3.json("js/contours.json", function(collection) {
-
-  var transform = d3.geo.transform({point: projectPoint})
-  var path = d3.geo.path().projection(transform);
-  var feature = g.selectAll("path")
-          .data(collection.geometries)
-          .enter()
-          .append("path")
-          .style("fill", function(d) { 
-                  return color(d.properties.level); 
-          });
-
-          
-          
-          
+    }
+    function projectPoint(x, y) {
+        var point = map.latLngToLayerPoint(new L.LatLng(y, x));
+        this.stream.point(point.x, point.y);
+    } 
     map.on("viewreset", reset);
-   reset();
-   // Reposition the SVG to cover the features.
-   function reset() {
-     var bounds = path.bounds(collection)
-     var topLeft = bounds[0];
-     var bottomRight = bounds[1];
-      svg.attr("width", bottomRight[0] - topLeft[0])
-        .attr("height", bottomRight[1] - topLeft[1])
-        .style("left", topLeft[0] + "px")
-        .style("top", topLeft[1] + "px");
-       g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")");
-       //apply a class with the 'handle' value from the geojson file
-       feature.attr("class", function (d) {
-           return "code " + d.handle;
-       });
-       feature.attr("d", path);
-   }
-   // Use Leaflet to implement a D3 geometric transformation.
-   function projectPoint(x, y) {
-       var point = map.latLngToLayerPoint(new L.LatLng(y, x));
-       this.stream.point(point.x, point.y);
-   }
+    reset();  
+      
+      
 
-
-
-  // console.log(collection.geometries);
-  
-//   collection.geometries.forEach(function(d){
-//     contourLayer.addData(d,{
-//       style: {
-//     "color": "#ff0000",
-//     // "weight": 20,
-//     // "opacity": 0.65
-// }
-    // }).addTo(map);
-  // });
-  
-  
-  // var feature = g.selectAll("path")
-  //     .data(topojson.object(topology, topology.objects.contours).geometries)
-  //     .enter()
-  //     .append("path")
-  //     .style("fill", function(d) {
-  //             return color(d.properties.level);
-  //     });
-  //
-  // map.on("viewreset", reset);
-  // reset();
-  //
-  // // Reposition the SVG to cover the features.
-  // function reset() {
-  //   var bottomLeft = project(bounds[0]),
-  //       topRight = project(bounds[1]);
-  //
-  //   svg.attr("width", topRight[0] - bottomLeft[0])
-  //      .attr("height", bottomLeft[1] - topRight[1])
-  //      .style("margin-left", bottomLeft[0] + "px")
-  //      .style("margin-top", topRight[1] + "px");
-  //
-  //   g.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
-  //
-  //   feature.attr("d", path);
-  // }
-  //
-  // // Use Leaflet to implement a D3 geographic projection.
-  // function project(x) {
-  //   var point = map.latLngToLayerPoint(new L.LatLng(x[1], x[0]));
-  //   return [point.x, point.y];
-  // }
-});
+  });
 
 	</script>
 </body>

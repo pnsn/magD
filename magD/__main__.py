@@ -53,18 +53,11 @@ def main(args=None):
     for lat in lat_list:
         print lat
         for lon in lon_list:
-            # # set boundary's artifically high to close contours
-            # if lat ==lat_list[0] or lat ==lat_list[-1] or lon==lon_list[0] or lon==lon_list[-1]:
-            #   value_list.append(max_value)
-            #   continue
             mindetect = []
 
             # for every scnl 
             for scnl in scnls:
-                # print "scnl = %s"%scnl.sta
                 if len(scnl.powers)>0:
-                    # print("sncllllss %s", scnl.sta)
-                    # next;
                     start_period = 0.001
                     end_period = 280
 
@@ -81,8 +74,6 @@ def main(args=None):
                         fault_radius = seis.fault_radius(fc, beta)
                         Mo = seis.moment(fault_radius)
                         Mw = seis.moment_magnitude(Mo)
-                        # if period==start_period:
-                        #     print Mw
                         filtfc=seis.signal_adjusted_frequency(Mw,fc)
                         nyquist=scnl.samprate*nyquist_correction
                 
@@ -101,18 +92,11 @@ def main(args=None):
 
                         detection = seis.min_detect(scnl,db, Mw, filtfc)
                         if(detection):
-                            # print"##########################"
-                            # print fc
-                            # print filtfc
-                            # print Mw
-                            # stats.increment_station(sta)
                             mindetect.append((Mw,scnl))
                             break
 
                         period = period * (2 ** 0.125)
-            # mindetect.sort()
             mindetect = sorted(mindetect, key=lambda tup: tup[0])
-            # mindetect_matrix.append(mindetect)
             value = mindetect[num_stas-1][0]
             value_list.append(value)
             lon+=lon_step
@@ -127,7 +111,7 @@ def main(args=None):
     print "median val=%f"%np.median(value_list)
     layer = MapLayer(lat_list, lon_list, value_list, .25)
     layer.make_grid3("mag_detect")
-    layer.write_json_to_file("./public/js/grid3.json")
+    layer.write_json_to_file("./public/js/magDgrid.json")
     stats.write_json_to_file("./public/js/stations_stats.json")
     print stats.stations
     # layer.write_to_csv("./test/data/detections_5sta.csv")
