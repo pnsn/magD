@@ -99,23 +99,12 @@ Calculates the min detection at this point for this given station
 db=attenuated noise at station
 sta=station
 Mw=mag
-
-sta_fc=nyqist or station adjusted value
-
-    
+sta_fc=nyqist or station adjusted value 
 '''
-#the station frequencies are index in the following way
-# ratio = freqs[0]/freqs[1]
-# start_frequency* (ratio)^index
-#so index= log of base ratio to the (freq/freqs[0])
-def get_frequency_index(freq, freq0, base):
-    return int(round(math.log(freq/freq0, base)))
-    
-    
-def min_detect(db, sta, Mw, station_freq, station_objects):
-    index=get_frequency_index(station_freq, station_objects[sta]['freq0'],station_objects[sta]['base'])
-    stafc = station_objects[sta]['modes'][index]
-    vel_stafc = stafc -(20*math.log10(station_freq*2*math.pi))
+def min_detect(scnl, db, Mw, freq):
+    stafc=scnl.frequency_power(freq)
+    # stafc = station_objects[sta]['modes'][index]
+    vel_stafc = stafc -(20*math.log10(freq*2*math.pi))
     if stafc < -170:
         vel_stafc = -99.1111
         stafc = -99.1111
@@ -124,3 +113,4 @@ def min_detect(db, sta, Mw, station_freq, station_objects):
         mindetect = Mw
         return True
     return False
+    

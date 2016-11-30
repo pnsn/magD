@@ -3,31 +3,50 @@
 import urllib2
 import xml.etree.ElementTree as etree
 import xml.etree.cElementTree as ET
+from scnl import Scnl
+from pprint import pprint
+
 
 #use fdsn webservice
-# Returns stations with  lat/lon
-def get_available_stations(sta, chan):
-    fdsn_resp = urllib2.urlopen(
-        'http://service.iris.edu/fdsnws/station/1/query?net=UW&sta=%s&loc=*&cha=%s&level=station&format=xml&includecomments=true&nodata=404'%(sta,chan))
+# Returns list of Scnl objects
+def get_available_scnls(sta_string, chan_string,net_string):
+    stations = []
+    url ="http://service.iris.edu/fdsnws/station/1/query?net=" + net_string + \
+        "&sta=" + sta_string + "&loc=*&cha=" + chan_string + "&level=channel" \
+        "&format=xml&includecomments=true&nodata=404"
+    fdsn_resp = urllib2.urlopen(url)
+    ns="{http://www.fdsn.org/xml/station/1}"
     tree = ET.parse(fdsn_resp)
     root = tree.getroot()
-    fdsn = root[5].getchildren()
-    stations = []
-    #create obj of form:
-    #{sta: string, lat: float, lon:float }
-    for station in fdsn:
-        attrib = station.attrib
-        if len(attrib) > 0:
-            sta={}
-            children = station.getchildren()
-            sta['sta'] = attrib["code"]
-            for child in children:
-                if child.tag.find("Lat") != -1:
-                    sta['lat'] = float(child.text)
-                elif child.tag.find("Lon") != -1:
-                    sta['lon'] = float(child.text)
-            if 'lat' in sta.keys() and 'lon' in sta.keys():
-              stations.append(sta)
+
+    for network in root.findall("%sNetwork"%ns):
+        net=network.attrib['code']
+        for station in network.findall("%sStation"%ns):
+            sta= station.attrib['code']
+            #ensure we only return on channel per site.
+            #use precendence of chan_string with first station 
+            #having more weight than the next.Ensure type of GEOPHYSICAL since 
+            #type=TRIGGERED will not have PDF
+            prefchan=[]
+            for chan in chan_string.split(","):
+                prefchan=station.findall("%sChannel[@code='%s'][%sType='GEOPHYSICAL']"%(ns,chan,ns))
+                if len(prefchan) > 0:
+                    break
+            
+            if len(prefchan) > 0:
+                channel=prefchan[0]
+                chan=channel.attrib['code']
+                loc=channel.attrib['locationCode']
+                lat=lon=samp=None
+                for node in channel.iter():                    
+                    if node.find('%sLongitude'%ns) is not None:
+                        lon=float(node.find('%sLongitude'%ns).text)
+                    if node.find('%sLatitude'%ns) is not None:
+                        lat=float(node.find('%sLatitude'%ns).text)
+                    if node.find('%sSampleRate'%ns) is not None:
+                        samp=float(node.find('%sSampleRate'%ns).text)                    
+                if lon is not None and lon is not None and samp is not None:
+                    stations.append(Scnl(sta,chan,net,loc,samp,lat,lon))
     return stations
 
 
@@ -36,9 +55,9 @@ def get_available_stations(sta, chan):
 # Returns the noise data for that station.
 # http://service.iris.edu/mustang/noise-pdf/1/query?net=UW&sta=BRAN&loc=--&cha=BHZ&quality=M&format=xml
 
-def get_noise_pdf(sta, chan, net):
-    url = ''.join(["http://service.iris.edu/mustang/noise-pdf/1/query?net=", net, "&sta=", sta,
-                   "&loc=*&cha=" + chan + "&quality=M&format=xml"])
+def get_noise_pdf(scnl):
+    url = ''.join(["http://service.iris.edu/mustang/noise-pdf/1/query?net=", scnl.net, "&sta=", scnl.sta,
+                   "&loc=*&cha=" + scnl.chan + "&quality=M&format=xml"])
     try:
       xml_file = urllib2.urlopen(url)
       tree2 = ET.parse(xml_file)
@@ -46,51 +65,18 @@ def get_noise_pdf(sta, chan, net):
       return root2.findall("Histogram")[0].getchildren()
     except urllib2.HTTPError as err:
       if err.code == 404:
-         print "error: %s for sta: %s"%(err,sta)
+         print "error: %s for scnl: %s:%s:%s"%(err,scnl.sta, scnl.chan,scnl.net)
+         print "using url %s"%url
          return None
       else:
         raise err
         
         
-''' Creates individual station objects for each station, storing the noise in list,
- The nyquist value, and the station code. 
-The ratio of freq1/freq0 (base) are used to index modes
-samples are in the following format
-#<Bucket freq="0.0052556" hits="1" power="-199"/>
-return list of objects of type
-    {sta: {nyquist: nyquist, cords: (lat, lon), modes: [mode0,mode1,...,moden], freq0:float, base:float }
+''' 
 '''
-def create_station_pdf_modes(nyquist, sta, chan, net):
-    #get available stations for net/chan using 
-    stations = get_available_stations(sta,chan)
-    pdf_modes = {}
-    for station in stations:    
-        sta = station['sta']
+def create_scnl_pdf_modes(scnls):
+    for scnl in scnls:
         #get pdf for this station
-        samples = get_noise_pdf(sta, chan, net)
-        if samples is not None:
-          mode = float(samples[0].attrib["hits"])
-          power = float(samples[0].attrib["power"])
-          freq=float(samples[0].attrib["freq"]) 
-          freq0=freq
-          base=None
-          modes = []
-          # creates a station object that contains freq pairs with the mode/power
-          for sample in samples:
-              freq2 = float(sample.attrib["freq"])
-              if freq2 == freq:
-                if int(sample.attrib["hits"]) > mode:
-                  mode = int(sample.attrib["hits"])
-                  power = int(sample.attrib["power"])
-              else:
-                  #we want freq1 to determine base
-                  if freq==freq0:
-                      base=freq2/freq0
-                  modes.append(power)
-                  freq = freq2
-                  mode = int(sample.attrib["hits"])
-                  power = int(sample.attrib["power"])
-          pdf_modes[sta] = {'nyquist': nyquist, 'cords': (station['lat'],station['lon']), 'modes': modes, 'freq0': freq0, 'base': base}
-      
-    return pdf_modes
-         
+        noise = get_noise_pdf(scnl)
+        if noise is not None:
+            scnl.set_powers(scnl, noise)
