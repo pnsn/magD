@@ -111,8 +111,8 @@ def main(args=None):
     print "median val=%f"%np.median(value_list)
     layer = MapLayer(lat_list, lon_list, value_list, .25)
     layer.make_grid3("mag_detect")
-    layer.write_json_to_file("./public/js/magDgrid.json")
-    stats.write_json_to_file("./public/js/stations_stats.json")
+    layer.write_json_to_file("./public/json/magDgrid.json")
+    stats.write_json_to_file("./public/json/stations_stats.json")
     print stats.stations
     # layer.write_to_csv("./test/data/detections_5sta.csv")
     # layer.make_contours()
