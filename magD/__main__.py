@@ -8,6 +8,8 @@ import numpy as np
 import iris
 import seis
 from pprint import pprint
+from scnl import Scnl
+
 sys.path.append(os.path.abspath('..'))
 
 #entry point
@@ -19,18 +21,18 @@ def main(args=None):
     STA_STRING="*"
     # STA_STRING="UMAT"
     CHAN_STRING="BHZ,HHZ"
-    NET_STRING="UW"
+    NET_STRING="UW,CC,NC"
 
     # Parameters for calculating the minimum earthquake detected.
     #lats will be parsed from N-S (large to small)
-    lon_step=0.1 #degree increments (resolution)
+    lon_step=0.05 #degree increments (resolution)
     lat_step= lon_step*-1 #go backwards
     lat_min=42.0 + lat_step
     lat_max=49.0  
-    lon_min=-125.0
-    lon_max=-116.0 + lon_step
+    lon_min=-126.0
+    lon_max=-115.0 + lon_step
     nyquist_correction= 0.4
-    
+    num_sta_detection=5
     #create rows and columns array
     lat_list=np.arange(lat_max, lat_min, lat_step) #reverse lat list
     lon_list=np.arange(lon_min, lon_max, lon_step)
@@ -38,17 +40,17 @@ def main(args=None):
     value_list=[]
     #number of stations for detection solution
     stats= StationStats()
-
+    
     mu = 3e11
     qconst = 300.0 
     beta = 3.5  # km/s
     cn = 1/(4 * mu * beta * 1e7)
     max_value=100
-    scnls = iris.get_available_scnls(STA_STRING, CHAN_STRING, NET_STRING)
-    iris.create_scnl_pdf_modes(scnls)
-    # print station_objects
-    # station_names = station_objects.keys()
-    num_stas=min(len(scnls), 5)
+    iris.get_available_scnls(STA_STRING, CHAN_STRING, NET_STRING)
+    iris.create_scnl_pdf_modes(Scnl.instances)
+    
+    #if #of stas < num_sta_detection use total num of stas
+    num_stas=min(len(Scnl.instances), num_sta_detection) 
     #for every point in grid
     for lat in lat_list:
         print lat
@@ -56,7 +58,7 @@ def main(args=None):
             mindetect = []
 
             # for every scnl 
-            for scnl in scnls:
+            for scnl in Scnl.instances:
                 if len(scnl.powers)>0:
                     start_period = 0.001
                     end_period = 280
@@ -110,13 +112,14 @@ def main(args=None):
     print "ave val=%f"%np.average(value_list)
     print "median val=%f"%np.median(value_list)
     layer = MapLayer(lat_list, lon_list, value_list, .25)
-    layer.make_grid3("mag_detect")
+    # layer.make_grid3("mag_detect")
+    layer.build_geojson_feature_collection()
+    layer.write_geojson_to_file("./public/json/geomagD.json")
     layer.write_json_to_file("./public/json/magDgrid.json")
-    stats.write_json_to_file("./public/json/stations_stats.json")
-    print stats.stations
-    # layer.write_to_csv("./test/data/detections_5sta.csv")
-    # layer.make_contours()
-    # layer.contours_to_file("./public/js/contours.json")
+    # stats.write_json_to_file("./public/json/stations_stats.json")
+    # print stats.stations
+    Scnl.write_json_to_file("./public/json/scnls.json")
+    layer.write_to_csv("./test/data/detections.csv")
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 '''
-Module of helper methods for the min detect algo
+Module for the min detect algo
 '''
 import math
 

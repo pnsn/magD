@@ -1,0 +1,461 @@
+{
+    "scnls": [
+        {
+            "loc": "", 
+            "sta": "ASBU", 
+            "lon": -121.3684, 
+            "chan": "BHZ", 
+            "lat": 43.82056, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "CIHL", 
+            "lon": -121.14862, 
+            "chan": "BHZ", 
+            "lat": 43.75097, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "CLBH", 
+            "lon": -122.143492, 
+            "chan": "BHZ", 
+            "lat": 42.907746, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "CPCO", 
+            "lon": -121.23319, 
+            "chan": "BHZ", 
+            "lat": 43.72201, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "CRST", 
+            "lon": -121.69852, 
+            "chan": "BHZ", 
+            "lat": 43.46064, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "JRO", 
+            "lon": -122.217798, 
+            "chan": "BHZ", 
+            "lat": 46.2751, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "NORM", 
+            "lon": -121.25268, 
+            "chan": "BHZ", 
+            "lat": 43.73896, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "OBSR", 
+            "lon": -121.81533, 
+            "chan": "BHZ", 
+            "lat": 46.89972, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "PANH", 
+            "lon": -121.64261, 
+            "chan": "BHZ", 
+            "lat": 46.859, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "SHRK", 
+            "lon": -121.528767, 
+            "chan": "BHZ", 
+            "lat": 45.464317, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "STD", 
+            "lon": -122.22396, 
+            "chan": "BHZ", 
+            "lat": 46.23761, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "SWF2", 
+            "lon": -122.21674, 
+            "chan": "BHZ", 
+            "lat": 46.17832, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "SWNB", 
+            "lon": -121.35535, 
+            "chan": "BHZ", 
+            "lat": 43.67274, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "TCBU", 
+            "lon": -121.66438, 
+            "chan": "BHZ", 
+            "lat": 44.24083, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "TMBU", 
+            "lon": -121.14451, 
+            "chan": "BHZ", 
+            "lat": 43.60189, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "WIFE", 
+            "lon": -121.81746, 
+            "chan": "BHZ", 
+            "lat": 44.05966, 
+            "net": "CC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "AFD", 
+            "lon": -120.968971, 
+            "chan": "HHZ", 
+            "lat": 38.945961, 
+            "net": "NC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "BBGB", 
+            "lon": -121.039566, 
+            "chan": "HHZ", 
+            "lat": 36.578484, 
+            "net": "NC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "GDXB", 
+            "lon": -122.795303, 
+            "chan": "HHZ", 
+            "lat": 38.807968, 
+            "net": "NC"
+        }, 
+        {
+            "loc": "", 
+            "sta": "BABR", 
+            "lon": -123.78924, 
+            "chan": "BHZ", 
+            "lat": 44.62132, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "BLOW", 
+            "lon": -122.1862, 
+            "chan": "BHZ", 
+            "lat": 44.6837, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "BRAN", 
+            "lon": -117.2277, 
+            "chan": "BHZ", 
+            "lat": 45.9734, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "CCRK", 
+            "lon": -119.8548, 
+            "chan": "BHZ", 
+            "lat": 46.5585, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "DAVN", 
+            "lon": -118.2741, 
+            "chan": "BHZ", 
+            "lat": 47.8006, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "DDRF", 
+            "lon": -119.0595, 
+            "chan": "BHZ", 
+            "lat": 46.4911, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "DOSE", 
+            "lon": -122.9718, 
+            "chan": "BHZ", 
+            "lat": 47.7172, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "FISH", 
+            "lon": -123.5591, 
+            "chan": "BHZ", 
+            "lat": 45.9306, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "FORK", 
+            "lon": -124.5662, 
+            "chan": "BHZ", 
+            "lat": 47.9475, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "HEBO", 
+            "lon": -123.75539, 
+            "chan": "BHZ", 
+            "lat": 45.2135, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "IRON", 
+            "lon": -118.4743, 
+            "chan": "BHZ", 
+            "lat": 43.358, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "IZEE", 
+            "lon": -119.5042, 
+            "chan": "BHZ", 
+            "lat": 44.082, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "JEDS", 
+            "lon": -124.04905, 
+            "chan": "BHZ", 
+            "lat": 43.75157, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "KENT", 
+            "lon": -120.6351, 
+            "chan": "BHZ", 
+            "lat": 45.2357, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "LCCR", 
+            "lon": -122.4784, 
+            "chan": "BHZ", 
+            "lat": 45.2059, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "LEBA", 
+            "lon": -123.5632, 
+            "chan": "BHZ", 
+            "lat": 46.5459, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "LON", 
+            "lon": -121.8096, 
+            "chan": "BHZ", 
+            "lat": 46.7506, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "LRIV", 
+            "lon": -123.504, 
+            "chan": "BHZ", 
+            "lat": 48.0575, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "MEGW", 
+            "lon": -123.87709, 
+            "chan": "BHZ", 
+            "lat": 46.26609, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "MRBL", 
+            "lon": -121.4845, 
+            "chan": "BHZ", 
+            "lat": 48.5183, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "OMAK", 
+            "lon": -119.3332, 
+            "chan": "BHZ", 
+            "lat": 48.3584, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "PASS", 
+            "lon": -122.0852, 
+            "chan": "BHZ", 
+            "lat": 48.9983, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "PHIN", 
+            "lon": -119.9278, 
+            "chan": "BHZ", 
+            "lat": 45.8951, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "PNLK", 
+            "lon": -122.03483, 
+            "chan": "HHZ", 
+            "lat": 47.58162, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "RADR", 
+            "lon": -123.79897, 
+            "chan": "BHZ", 
+            "lat": 46.42181, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "RAI", 
+            "lon": -122.8851, 
+            "chan": "BHZ", 
+            "lat": 46.0403, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "RATT", 
+            "lon": -121.80254, 
+            "chan": "BHZ", 
+            "lat": 47.42546, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "SP2", 
+            "lon": -122.24923, 
+            "chan": "BHZ", 
+            "lat": 47.55629, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "SPUD", 
+            "lon": -117.42749, 
+            "chan": "BHZ", 
+            "lat": 47.66469, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "STOR", 
+            "lon": -121.9888, 
+            "chan": "BHZ", 
+            "lat": 47.1881, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "TAKO", 
+            "lon": -124.08247, 
+            "chan": "BHZ", 
+            "lat": 43.74334, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "TOLO", 
+            "lon": -123.9225, 
+            "chan": "BHZ", 
+            "lat": 44.62187, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "TREE", 
+            "lon": -120.8934, 
+            "chan": "BHZ", 
+            "lat": 42.7258, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "TUCA", 
+            "lon": -118.1455, 
+            "chan": "BHZ", 
+            "lat": 46.5139, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "UMAT", 
+            "lon": -118.9595, 
+            "chan": "BHZ", 
+            "lat": 45.2904, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "WISH", 
+            "lon": -123.77118, 
+            "chan": "BHZ", 
+            "lat": 47.11698, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "WOLL", 
+            "lon": -118.921, 
+            "chan": "BHZ", 
+            "lat": 47.0573, 
+            "net": "UW"
+        }, 
+        {
+            "loc": "", 
+            "sta": "YACT", 
+            "lon": -122.4193, 
+            "chan": "BHZ", 
+            "lat": 45.9325, 
+            "net": "UW"
+        }
+    ], 
+    "name": "scnl_data"
+}

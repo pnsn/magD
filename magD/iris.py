@@ -47,7 +47,6 @@ def get_available_scnls(sta_string, chan_string,net_string):
                         samp=float(node.find('%sSampleRate'%ns).text)                    
                 if lon is not None and lon is not None and samp is not None:
                     stations.append(Scnl(sta,chan,net,loc,samp,lat,lon))
-    return stations
 
 
 # Finds Iris noise file for that station.

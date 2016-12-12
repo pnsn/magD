@@ -18,32 +18,46 @@ class MapLayer:
         self.mag_bin= 1.0/mag_bin
         self.levels=[]
         #get unique values and sort
-        self.geojson_mls={"type": "GeometryCollection", "geometries": []}
+        # self.geojson_mls={"type": "GeometryCollection", "geometries": []}
         self.grid3={}
+        self.featured_collection={"type": "FeatureCollection", "features": []}
    
     
-    def make_grid3(self, name, with_keys=False):
+    #create 2dim grid of values (mags)
+    def make_grid3(self, name):
         self.grid3['lat_start']=self.lats[0]
         self.grid3['lon_start']=self.lons[0]
         self.grid3['lat_step']=self.lats[1]-self.lats[0]
         self.grid3['lon_step']=self.lons[1]-self.lons[0]
-        # vals=[round(x*4.0)/4.0 for x in self.vals]
-        # print vals
-        vals=np.round(self.vals,2)
+        vals=self.vals
         self.grid3['max']= round(max(self.vals),2)
-        print self.grid3['max']
+        # print self.grid3['max']
         self.grid3['min'] = round(min(vals),2)
         lats_len=len(self.lats)
         lons_len=(len(self.lons))
         
         self.grid3["grid"]=np.reshape(vals, (len(self.lats), len(self.lons))).tolist()
         print self.grid3["grid"]
-        # i=0
-        #         i+=1
-                
-    def get_grid3(self):
-        return self.grid3
          
+    def build_geojson_feature_collection(self):
+     #convert our data grid to GeoJSON
+     index=0     
+     for lat in self.lats:
+       for lon in self.lons:
+          newPoint = { 
+            "geometry": {
+              "type": "Point",
+              "coordinates": [lat,lon]},
+              "properties": { "z": round(self.vals[index],2)},
+              "type": "Feature"
+            }
+          index+=1
+          self.featured_collection['features'].append(newPoint);
+   
+    def write_geojson_to_file(self, path):
+        with open(path, 'w') as outfile:
+            json.dump(self.featured_collection, outfile, indent=4)
+   
     def write_json_to_file(self, path):
         with open(path, 'w') as outfile:
             json.dump(self.grid3, outfile, indent=4)
