@@ -2,15 +2,19 @@
 import math
 import sys
 import os
-from map_layer import MapLayer
+from origin import Origin
 from station_stats import StationStats
+from scnl import Scnl
+
 import numpy as np
 import iris
 import seis
 from pprint import pprint
-from scnl import Scnl
+import json
+import csv
 
 sys.path.append(os.path.abspath('..'))
+
 
 #entry point
 def main(args=None):
@@ -25,7 +29,7 @@ def main(args=None):
 
     # Parameters for calculating the minimum earthquake detected.
     #lats will be parsed from N-S (large to small)
-    lon_step=0.05 #degree increments (resolution)
+    lon_step=1.0 #degree increments (resolution)
     lat_step= lon_step*-1 #go backwards
     lat_min=42.0 + lat_step
     lat_max=49.0  
@@ -34,7 +38,8 @@ def main(args=None):
     nyquist_correction= 0.4
     num_sta_detection=5
     #create rows and columns array
-    lat_list=np.arange(lat_max, lat_min, lat_step) #reverse lat list
+    #reverse lat list (North is up)
+    lat_list=np.arange(lat_max, lat_min, lat_step) 
     lon_list=np.arange(lon_min, lon_max, lon_step)
     #for each point record count
     value_list=[]
@@ -55,8 +60,8 @@ def main(args=None):
     for lat in lat_list:
         print lat
         for lon in lon_list:
+            origin = Origin(lat,lon)
             mindetect = []
-
             # for every scnl 
             for scnl in Scnl.instances:
                 if len(scnl.powers)>0:
@@ -66,10 +71,10 @@ def main(args=None):
                     # Goes through all the freqs, i.e. from small to large Mw
                     #this way the first detection will be the min Mw
                     period = start_period
-                    origin = (lat, lon)
-                    destination = (scnl.lat, scnl.lon)
+                    # origin = (source.lat, source.lon)
+                    # destination = (scnl.lat, scnl.lon)
                     # Calculate distance between earthquake and station
-                    delta_rad, delta_km = seis.distance(origin, destination)  # km
+                    delta_rad, delta_km = seis.distance(origin, scnl)  # km
                     #for each period
                     while period <= end_period:
                         fc = 1/period
@@ -94,12 +99,12 @@ def main(args=None):
 
                         detection = seis.min_detect(scnl,db, Mw, filtfc)
                         if(detection):
-                            mindetect.append((Mw,scnl))
+                            origin.insertDetection((Mw,scnl))
                             break
 
                         period = period * (2 ** 0.125)
-            mindetect = sorted(mindetect, key=lambda tup: tup[0])
-            value = mindetect[num_stas-1][0]
+            # origin.sort_detections_by_mw()
+            value= origin.min_detection(num_stas)
             value_list.append(value)
             lon+=lon_step
         
@@ -111,15 +116,37 @@ def main(args=None):
     print "max val=%f"%max_val
     print "ave val=%f"%np.average(value_list)
     print "median val=%f"%np.median(value_list)
-    layer = MapLayer(lat_list, lon_list, value_list, .25)
-    # layer.make_grid3("mag_detect")
-    layer.build_geojson_feature_collection()
-    layer.write_geojson_to_file("./public/json/geomagD.json")
-    layer.write_json_to_file("./public/json/magDgrid.json")
-    # stats.write_json_to_file("./public/json/stations_stats.json")
-    # print stats.stations
-    Scnl.write_json_to_file("./public/json/scnls.json")
-    layer.write_to_csv("./test/data/detections.csv")
+    scnl_dict=Scnl.instances_to_dict()
+    write_json_to_file(scnl_dict, "./public/json/scnls.json")
+    mags_dict=Origin.build_map_grid(lat_list, lon_list, num_stas, True)
+    write_json_to_file(mags_dict, "./public/json/magDgrid.json")
+    
+    build_geojson_feature_collection()
+    # # layer.write_geojson_to_file("./public/json/geomagD.json")
+    # layer.write_json_to_file("./public/json/magDgrid.json")
+    # # stats.write_json_to_file("./public/json/stations_stats.json")
+    # layer.write_to_csv("./test/data/detections.csv")
+
+
+#write dict to json file
+def write_json_to_file(d, path):
+    with open(path, 'w') as outfile:
+        json.dump(d, outfile, indent=4)
+        
+
+#write out to csv
+def write_to_csv(self, path, lats, lons, vals):
+    i=0
+    with open(path, 'w') as csvfile:
+        fieldnames = ['lat', 'lon', 'val']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for lat in lats:
+            for lon in lons:
+                writer.writerow({'lat': lat, 'lon': lon, 'val': vals[i]})
+                i+=1
+    print "done with csv and index = %i and length =%i"%(i, len(vals))
 
 if __name__ == "__main__":
     main()
+    

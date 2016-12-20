@@ -8,7 +8,7 @@ from pprint import pprint
 
 
 #use fdsn webservice
-# Returns list of Scnl objects
+# to build list of scnls
 def get_available_scnls(sta_string, chan_string,net_string):
     stations = []
     url ="http://service.iris.edu/fdsnws/station/1/query?net=" + net_string + \
@@ -47,7 +47,7 @@ def get_available_scnls(sta_string, chan_string,net_string):
                         samp=float(node.find('%sSampleRate'%ns).text)                    
                 if lon is not None and lon is not None and samp is not None:
                     stations.append(Scnl(sta,chan,net,loc,samp,lat,lon))
-
+      
 
 # Finds Iris noise file for that station.
 # Needs a station name, chan, and network

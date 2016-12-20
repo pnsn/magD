@@ -2,7 +2,7 @@ $(function(){
   var layer = new L.StamenTileLayer("toner");
 
   var map = new L.Map("map", {
-        center: [43, -120],
+        center: [45.25, -120.5],
         zoom: 7
       }).addLayer(layer);
   map._initPathRoot();
@@ -62,18 +62,11 @@ $(function(){
     info.update();
 	}
   
-  d3.json("json/magDgrid-0.05.json", function(data) {
+  d3.json("json/magDgrid.json", function(data) {
   
     var colors = setColorScale(data); 
     var bands = bandGridData(data, mags);
-    // var arr=[];
-    for(var i=0; i< bands.length; i++){
-      if(bands[i].level===filterVals[0]){
-        console.log(bands[i]);
-      }
-    }
-
-
+    bands= sortContours(bands);
     
     
     if(filterVals.length >0){
@@ -82,12 +75,6 @@ $(function(){
     if(filterOutVals.length >0){
       bands=filterOutBands(bands, filterOutVals);
     }
-    bands= sortContours(bands);
-    // var arr=[];
-    // for(var i=0; i< bands.length; i++){
-    //   arr.push(bands[i].level);
-    // }
-    // console.log(arr);
     
       
     
@@ -107,7 +94,7 @@ $(function(){
     .on('mouseover', highlightFeature)        
     .on('mouseout', resetHighlight);
   
-    function reset() {
+    function resetContours() {
       contourPath.attr("level", function(d){
         return d.level;
       });
@@ -116,6 +103,7 @@ $(function(){
           var pathStr = d.map(function(d1) {
             var point = map.latLngToLayerPoint(new L.LatLng(d1[1], d1[2]));
               return d1[0] + point.x + "," + point.y;
+              // return d1[0] + d1[1] + "," + d1[2];
           }).join('');
           return pathStr;
       });                          
@@ -126,8 +114,8 @@ $(function(){
         var point = map.latLngToLayerPoint(new L.LatLng(y, x));
         this.stream.point(point.x, point.y);
     } 
-    map.on("viewreset", reset);
-    reset();  
+    map.on("viewreset", resetContours);
+    resetContours();  
     
     
     d3.json("json/scnls.json", function(collection) {
@@ -148,10 +136,11 @@ $(function(){
             .attr("xlink:href",'images/triangle-red.png')
             .attr("opacity", 0.8);
 
-      map.on("viewreset", update);
-      update();
+      map.on("viewreset", resetStations);
+      resetStations();
 
-      function update() {
+      function resetStations() {
+        
         station.attr("transform",
         function(d) {
           return "translate("+
@@ -159,7 +148,16 @@ $(function(){
             map.latLngToLayerPoint(d.LatLng).y +")";
           }
         );
+        
+        station.attr("d", function(d){
+          $("#station-info table tbody").append("<tr><td>" +d.sta +"</td><td>" +d.chan +"</td></tr>");
+        });
+        
+        
+        
+        
       }
+    
     });  
 
   });

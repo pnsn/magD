@@ -1,6 +1,5 @@
 '''class for scnls'''
 import math
-import json
 class Scnl:
   instances =[]
   def __init__(self,sta,chan,net,loc="",samprate=None,lat=None,lon=None):
@@ -55,13 +54,7 @@ class Scnl:
            "loc": scnl.loc, "lat": scnl.lat, "lon": scnl.lon})
     return col
       
-      
-  @classmethod
-  def write_json_to_file(cls, path):
-    dic=cls.instances_to_dict()
-    with open(path, 'w') as outfile:
-      json.dump(dic, outfile, indent=4)
-  
+        
 
        
       

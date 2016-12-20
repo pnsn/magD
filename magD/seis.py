@@ -23,8 +23,8 @@ signal_adjusted_values = {
 # Calculates the distance between two locations with a lat/lon
 #return both angular distance(rad) and distance in km
 def distance(origin, destination):
-    lat1, lon1 = origin
-    lat2, lon2 = destination
+    lat1, lon1 = origin.lat, origin.lon
+    lat2, lon2 = destination.lat, destination.lon
     radius = 6371  # km
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)

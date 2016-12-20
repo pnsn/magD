@@ -27,39 +27,40 @@ function pointInPoly(x,y, poly2){
 }
 
 
-function contourGridData(data, mags){
-  // var grid = setHighBoundaries(data, mags[i]);
-  var grid = data.grid;
-  var bands=[];
-  for(var i=0; i< mags.length-1; i++){
-    if (mags[i] < data.max){
-      var contour=MarchingSquaresJS.IsoContours(grid,mags[i], mags[i+1]);
-      for(var j=0;j<contour.length;j++){
-        var band=[];
-        var pen = "M";
-        for(var k=0;k<contour[j].length; k++){
-          var lat=data.lat_start + contour[j][k][1]*data.lat_step;
-          var lon=contour[j][k][0]*data.lon_step + data.lon_start;
-          band.push([pen,lat,lon]);
-          pen = "L";
-        }
-        if( band !==undefined && band.length> 1){
-          band.level=mags[i];
-          bands.push(band);
-       }
-    
-      }
-    }
-  }
-  return bands;
-}
+// function contourGridData(data, mags){
+//   var grid = setHighBoundaries(data, mags[i]);
+//   // var grid = data.grid;
+//   var bands=[];
+//   for(var i=0; i< mags.length-1; i++){
+//     if (mags[i] < data.max){
+//       var contour=MarchingSquaresJS.IsoContours(grid,mags[i], mags[i+1]);
+//       for(var j=0;j<contour.length;j++){
+//         var band=[];
+//         var pen = "M";
+//         for(var k=0;k<contour[j].length; k++){
+//           var lat=data.lat_start + contour[j][k][1]*data.lat_step;
+//           var lon=contour[j][k][0]*data.lon_step + data.lon_start;
+//           band.push([pen,lat,lon]);
+//           pen = "L";
+//         }
+//         if( band !==undefined && band.length> 1){
+//           band.level=mags[i];
+//           bands.push(band);
+//        }
+//
+//       }
+//     }
+//   }
+//   return bands;
+// }
   
   
   
   
   function bandGridData(data, mags){
-    var grid = setHighBoundaries(data, mags[i]);
-    // var grid = data.grid;
+    var grid = data.grid;
+    
+    // var grid = setHighBoundaries(data, mags[i]);
     // for(var i=0; i<grid.length; i++){
     //   var str="[";
     //   for(var j=0; j< grid[i].length; j++){
@@ -71,6 +72,8 @@ function contourGridData(data, mags){
     var bands=[];
     for(var i=0; i< mags.length-1; i++){
       if (mags[i] < data.max){
+        var grid = setHighBoundaries(data, mags[i]);
+        
         var isoband=MarchingSquaresJS.IsoBands(grid,mags[i], mags[i+1]);
         for(var j=0;j<isoband.length;j++){
           var band=[];
@@ -79,6 +82,7 @@ function contourGridData(data, mags){
             var lat=data.lat_start + isoband[j][k][1]*data.lat_step;
             var lon=isoband[j][k][0]*data.lon_step + data.lon_start;
             band.push([pen,lat,lon]);
+            // band.push([pen, isoband[j][k][1], isoband[j][k][0]])
             pen = "L";
           }
           if( band !==undefined && band.length> 1){
@@ -123,22 +127,23 @@ function contourGridData(data, mags){
     
   }
   
+    //This isn't used. 
     //remove polyies that are of same level and fit into
     // each other. This probably could be done in sortContours but
     // since each relationship needs to be checked and poly removed 
     // from set, is cleaner to do in two steps.
   function removeSiblinginPoly(bands){
     bands=sortContoursBySize(bands);
-    // for(var i=0; i< bands.length ; i++){
- //      currentLevel=bands[i].level;
- //      for(var j=i; j < bands.length; j++){
- //        console.log(currentLevel, bands[j].level);
- //
- //        if(bands[j].level==currentLevel && polyInPoly(bands[i], bands[j])){
- //          bands.splice(j,1);
- //        }
- //      }
- //    }
+    for(var i=0; i< bands.length ; i++){
+      currentLevel=bands[i].level;
+      for(var j=i; j < bands.length; j++){
+        console.log(currentLevel, bands[j].level);
+
+        if(bands[j].level==currentLevel && polyInPoly(bands[i], bands[j])){
+          bands.splice(j,1);
+        }
+      }
+    }
     return bands;
     
   }
@@ -184,7 +189,7 @@ function contourGridData(data, mags){
     for(var i=0; i< grid.length; i++){
       for(var j=0; j< grid[i].length; j++){
         if(i===0 || i===grid.length -1 || j===0 || j=== grid[i].length -1)
-          grid[i][j]=-100;
+          grid[i][j]=100;
       }
     }
     return grid;
