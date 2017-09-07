@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#this is the inital script that the classes were built off of. I can probably be removed
 
 #NOTE TO SELF: ask Jon about whether you need all the bucket frequencies or you just need the mode...
 import xml.etree.ElementTree as etree

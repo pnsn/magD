@@ -1,5 +1,6 @@
 '''
-Module for the min detect algo
+Module of functions specific to 
+min detect algo
 '''
 import math
 
@@ -80,8 +81,8 @@ def amplitude_power_conversion(As):
 
 #use mag and angular distance to lookup adjusted frequecy in the signal_adjusted_values obj
 def signal_adjusted_frequency(Mw, rad):
-    keys = signal_adjusted_values.keys()  # sav stands for Signal_Adjustment_Values
-    keys.sort()
+    keys = sorted(signal_adjusted_values.keys())
+    # keys.sort()
     Mw=max(keys[0], min(Mw, keys[-1]))
     for i in range(len(keys)-1):
         if Mw >= keys[i] and Mw < keys[i + 1]:

@@ -1,9 +1,31 @@
 $(function(){  
   var layer = new L.StamenTileLayer("toner");
-
+  
+  
+  
+  
+  $.urlParam = function(name){
+      var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      if (results==null){
+         return null;
+      }
+      else{
+         return results[1] || 0;
+      }
+  };
+  var latCenter=$.urlParam('latCenter');
+  var lonCenter=$.urlParam('lonCenter');
+  var dataFile=$.urlParam('dataFile');
+  var mapZoom=$.urlParam('mapZoom');
+  // alert(latCenter);
+  // var lonCenter=$.url().param('lonCenter');
+  // var dataFile=$.url().param('dataFile');
+  
+  
+  
   var map = new L.Map("map", {
-        center: [45.25, -120.5],
-        zoom: 7
+        center: [latCenter, lonCenter],
+        zoom: mapZoom
       }).addLayer(layer);
   map._initPathRoot();
   //debugging. Only show these mags. If empty, no debugging
@@ -19,7 +41,8 @@ $(function(){
       0.0 ,0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
       1.0 ,1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9,
       2.0 ,2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9,
-      3.0
+      3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 
+      4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9
   ];
   // mags=[1.3, 1.4];
   
@@ -62,7 +85,7 @@ $(function(){
     info.update();
 	}
   
-  d3.json("json/magDgrid.json", function(data) {
+  d3.json("json/"+ dataFile + ".json", function(data) {
   
     var colors = setColorScale(data); 
     var bands = bandGridData(data, mags);

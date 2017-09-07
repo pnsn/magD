@@ -4,14 +4,12 @@ setup(name='magD',
       version='0.1.0',
       packages=['magD'],
       install_requires=[
-          "numpy",
-          "matplotlib",
-          "geojson",
-          "geobuf",
-      ],
+          "numpy"
+          ],
       entry_points={
           'console_scripts': [
-              'magD = magD.__main__:main'
+              'magD = magD.magD.py',
+              'obs = obs.obs.py'
           ]
      },
 )
