@@ -85,7 +85,7 @@ $(function(){
     info.update();
 	}
   
-  d3.json("json/"+ dataFile + ".json", function(data) {
+  d3.json("json/"+ dataFile + "-data.json", function(data) {
   
     var colors = setColorScale(data); 
     var bands = bandGridData(data, mags);
@@ -141,7 +141,7 @@ $(function(){
     resetContours();  
     
     
-    d3.json("json/scnls.json", function(collection) {
+    d3.json("json/" + dataFile + "-scnls.json", function(collection) {
       /* Add a LatLng object to each item in the dataset */
       collection.scnls.forEach(function(d) {
         d.LatLng = new L.LatLng(d.lat,

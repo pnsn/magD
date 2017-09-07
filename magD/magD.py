@@ -137,9 +137,9 @@ def main(args=None):
     print("ave val=%f"%np.average(value_list))
     print("median val=%f"%np.median(value_list))
     scnl_dict=Scnl.collection_to_dict()
-    write_json_to_file(scnl_dict, "./public/json/scnls.json")
+    write_json_to_file(scnl_dict, "./public/json/{}-scnls.json".format(config_key))
     mags_dict=Origin.build_map_grid(lat_list, lon_list, num_stas, True)
-    write_json_to_file(mags_dict, "./public/json/{}.json".format(config_key))
+    write_json_to_file(mags_dict, "./public/json/{}-data.json".format(config_key))
     
     Origin.build_geojson_feature_collection(lat_list, lon_list, num_stas)
     # # layer.write_geojson_to_file("./public/json/geomagD.json")
