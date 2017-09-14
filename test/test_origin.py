@@ -2,8 +2,8 @@ import unittest
 import sys
 import os
 sys.path.append(os.path.abspath('..'))
-from MagD.origin import Origin
-from MagD.scnl import Scnl
+from magD.origin import Origin
+from magD.scnl import Scnl
 
 # from pprint import pprint
 # import numpy as np
@@ -16,12 +16,15 @@ class TestOrigin(unittest.TestCase):
     
   """Test obj creation"""
   def test_obj_creation(self):
+    Origin.collection=[]
     for lat in range(10):
       Origin(lat, -122)
     self.assertEqual(len(Origin.collection), 10)
   
   """Test insert order"""
   def test_insert_order(self):
+    Origin.collection=[]
+    
     o=Origin(45, -122)
     scnl0=Scnl("sta", "chan", "net")
     scnl1=Scnl("sta1", "chan", "net")
@@ -37,18 +40,18 @@ class TestOrigin(unittest.TestCase):
     self.assertEqual(o.detections[0][1], scnl1)
     '''should insert at end'''
     o.insertDetection((5,scnl3))
-    print o.detections
+    print(o.detections)
     self.assertEqual(len(o.detections),3)
     self.assertEqual(o.detections[2][1], scnl3)
     
   '''test num_stas indexing'''   
     
-  def test_number_stas_index(self):
-    o=Origin(45, -122)
-    scnl=Scnl("sta", "chan", "net")
-    for mag in range(4,0,-1):
-      o.insertDetection(mag,scnl)
-    # self.assertEqual(o.min_detection(3), 3)
+  # def test_number_stas_index(self):
+  #   o=Origin(45, -122)
+  #   scnl=Scnl("sta", "chan", "net")
+  #   for mag in range(4,0,-1):
+  #     o.insertDetection(mag,scnl)
+  #   # self.assertEqual(o.min_detection(3), 3)
           
 
         

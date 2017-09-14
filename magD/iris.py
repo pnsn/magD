@@ -13,10 +13,18 @@ import xml.etree.cElementTree as ET
 from pprint import pprint
 
 
-#use fdsn webservice
-# to build and return list of scnls by querying fdsn service
-#strings are passed directly to fdns without altering.
-#stations is a collection of station objects,
+'''use fdsn webservice
+to build and return list of scnls by querying fdsn service
+strings are passed directly to fdns without altering.
+stations is a collection of station objects, 
+return dict
+{code: int, data: 2dim list of station data}
+where code is HTTP response, 2dim list contains:
+[['UMAT', 'HHZ', 'UW', '', 100.0, 45.2904, -118.9595]...]
+
+'''
+
+
 def get_fdsn(sta_string, chan_string,net_string):
     stations=[]
     url ="http://service.iris.edu/fdsnws/station/1/query?net=" + net_string + \
@@ -57,7 +65,7 @@ def get_fdsn(sta_string, chan_string,net_string):
                 #create new Scnl for each                  
                 if lon is not None and lon is not None and samp is not None:
                   stations.append([sta,chan,net,loc,samp,lat,lon])
-    return stations  
+    return {"code": fdsn_resp.getcode(), "data": stations }
 
 '''Finds Iris noise file for that station.
  Accepts Scnl instance
@@ -73,15 +81,18 @@ def get_fdsn(sta_string, chan_string,net_string):
   See example
  http://service.iris.edu/mustang/noise-pdf/1/query?net=UW&sta=BRAN&loc=--&cha=BHZ&quality=M&format=xml
           &starttime=2014-03-01&endtime=2014-04-01
+returns {code: int, data: xml_root}, where code is the HTML response code
 '''
 def get_noise_pdf(scnl, starttime, endtime):
-    url = ''.join(["http://service.iris.edu/mustang/noise-pdf/1/query?net=", scnl.net, "&sta=", scnl.sta,
-                   "&loc=*&cha=" + scnl.chan + "&quality=M&format=xml"])
+    url = "http://service.iris.edu/mustang/noise-pdf/1/query?"\
+             "net={}&sta={}&loc={}&cha={}""&quality=M&format=xml"\
+             "&starttime={}&endtime={}".format(scnl.net, scnl.sta,"*",scnl.chan, starttime, endtime)
+    print(url)
     try:
       xml_file = urlopen(url)
       tree2 = ET.parse(xml_file)
       root2 = tree2.getroot()
-      return root2.findall("Histogram")[0].getchildren()
+      return {'code': xml_file.getcode(), 'data': root2.findall("Histogram")[0].getchildren()}
     except urllib.error.HTTPError as err:
       if err.code == 404:
          print("404 error: %s for scnl: %s:%s:%s"%(err,scnl.sta, scnl.chan,scnl.net))

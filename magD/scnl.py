@@ -19,24 +19,26 @@ class Scnl:
       self.desc=desc
       self.base=None
       self.freq0=None
-      # self.df=None
+      self.df=None
       self.powers = []
       self.frequencies = []
       Scnl.collection.append(self)
   
   
-#TODO make noise dataframe
-  
-  # '''create dataframe of noise from iris pdf xml'''
- #  '''id freq power hits, group by freq for mode, mean, min, max'''
- #  def make_noise_df(self, xml):
- #    df = pd.DataFrame({
- #      'freq'  :[x.attrib["freq"]  for x in xml],
- #      'power' :[x.attrib["power"] for x in xml],
- #      'hits'  :[x.attrib["hits"]  for x in xml]
- #    })
- #    df['hits'][]
-  
+# #TODO make noise dataframe
+#
+#   '''create dataframe of noise from iris pdf xml
+#      blow up frame by creating a line for each hit
+#  '''
+#   def make_noise_df(self, noise):
+#     data=[]
+#     for sample in noise:
+#       for i in range(int(sample.attrib["hits"]))
+#         data.append((float(sample.attrib["freq"]), float(sample.attrib["power"])))
+#     self.df =pd.DataFrame(d, columns=('freq', 'power'))
+
+
+
   '''Accepts list of noise buckets, see iris.py for structure
       Finds mode( greatest # hits) to for each freq and use the power
       for that freq
@@ -81,13 +83,13 @@ class Scnl:
         break
     return index
 
-  '''for min frequency, what is the index of power and frequecies
+  '''for max frequency, what is the index of power and frequecies
     non inclusive since array.slice stops after the last wanted value
     '''
   def find_max_index(self,max):
     index=0
-    for i, val in reversed(list(enumerate(self.frequencies))):
-      if val<max:
+    for i, val in enumerate(self.frequencies):
+      if val>max:
         index=i
         break
     return index
