@@ -1,5 +1,5 @@
 '''
-Module of functions specific to 
+Module of functions specific to
 min detect algo
 '''
 import math
@@ -59,10 +59,9 @@ def geometric_spreading(delta):
 def amplitude(fc, Mo, cn, delta, filtfc):
     fc2=math.pow(fc,2)
     filtfc2=math.pow(filtfc,2)
-    
     # return  Mo * cn * filtfc * (math.pow(fc,2)) / (math.pow(filtfc,2)) + (math.pow(fc,2)/ delta)
     return  Mo * cn * filtfc * fc2 / (filtfc2 + fc2)/ delta
-    
+
 # calculates the attenuation factor
 # returns the adjusted amplitude.
 def attenuation(delta, q, beta, filtfc):
@@ -93,14 +92,14 @@ def signal_adjusted_frequency(Mw, rad):
     index=int(deg/2)
     index = max(0, min(index, 15))
     return signal_adjusted_values[mag_key][index]
-    
+
 
 '''
 Calculates the min detection at this point for this given station
 db=attenuated noise at station
 sta=station
 Mw=mag
-sta_fc=nyqist or station adjusted value 
+sta_fc=nyqist or station adjusted value
 '''
 def min_detect(scnl, db, Mw, freq):
     stafc=scnl.frequency_power(freq)
@@ -114,4 +113,3 @@ def min_detect(scnl, db, Mw, freq):
         mindetect = Mw
         return True
     return False
-    

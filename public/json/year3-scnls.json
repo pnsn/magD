@@ -1,349 +1,349 @@
 {
-    "name": "scnl_data",
     "scnls": [
         {
-            "net": "7D",
             "lon": -127.0868,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J67C",
-            "lat": 48.151
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 48.151,
+            "sta": "J67C"
         },
         {
-            "net": "7D",
             "lon": -126.1725,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J43C",
-            "lat": 46.137
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 46.137,
+            "sta": "J43C"
         },
         {
-            "net": "7D",
             "lon": -126.2683,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J35C",
-            "lat": 45.4995
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 45.4995,
+            "sta": "J35C"
         },
         {
-            "net": "7D",
             "lon": -126.1926,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J73C",
-            "lat": 48.7679
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 48.7679,
+            "sta": "J73C"
         },
         {
-            "net": "7D",
             "lon": -125.1923,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "M04C",
-            "lat": 45.5584
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 45.5584,
+            "sta": "M04C"
         },
         {
-            "net": "7D",
             "lon": -125.1398,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J65C",
-            "lat": 47.8913
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 47.8913,
+            "sta": "J65C"
         },
         {
-            "net": "7D",
             "lon": -125.6012,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "M02C",
-            "lat": 48.3069
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 48.3069,
+            "sta": "M02C"
         },
         {
-            "net": "7D",
             "lon": -126.1046,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "M03C",
-            "lat": 47.8884
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 47.8884,
+            "sta": "M03C"
         },
         {
-            "net": "7D",
             "lon": -126.7222,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "M01C",
-            "lat": 49.1504
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 49.1504,
+            "sta": "M01C"
         },
         {
-            "net": "7D",
             "lon": -127.8293,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J68C",
-            "lat": 48.4811
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 48.4811,
+            "sta": "J68C"
         },
         {
-            "net": "7D",
             "lon": -125.1168,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "M07C",
-            "lat": 44.8988
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 44.8988,
+            "sta": "M07C"
         },
         {
-            "net": "7D",
             "lon": -124.8954,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "M08C",
-            "lat": 44.1185
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 44.1185,
+            "sta": "M08C"
         },
         {
-            "net": "7D",
             "lon": -124.6217,
-            "chan": "BHZ",
             "loc": "",
-            "sta": "J25C",
-            "lat": 44.473
+            "net": "7D",
+            "chan": "BHZ",
+            "lat": 44.473,
+            "sta": "J25C"
         },
         {
-            "net": "7D",
             "lon": -124.5708,
+            "loc": "",
+            "net": "7D",
             "chan": "BHZ",
-            "loc": "",
-            "sta": "J33C",
-            "lat": 45.1068
+            "lat": 45.1068,
+            "sta": "J33C"
         },
         {
-            "net": "7D",
             "lon": -124.5376,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J41C",
-            "lat": 45.8117
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 45.8117,
+            "sta": "J41C"
         },
         {
-            "net": "7D",
             "lon": -124.4278,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J49C",
-            "lat": 46.438
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.438,
+            "sta": "J49C"
         },
         {
-            "net": "7D",
             "lon": -124.3668,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN19C",
-            "lat": 46.7301
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.7301,
+            "sta": "FN19C"
         },
         {
-            "net": "7D",
             "lon": -124.3333,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN01C",
-            "lat": 46.8823
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8823,
+            "sta": "FN01C"
         },
         {
-            "net": "7D",
             "lon": -124.428,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN02C",
-            "lat": 46.9497
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.9497,
+            "sta": "FN02C"
         },
         {
-            "net": "7D",
             "lon": -124.5251,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN03C",
-            "lat": 46.8872
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8872,
+            "sta": "FN03C"
         },
         {
-            "net": "7D",
             "lon": -124.6013,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN04C",
-            "lat": 46.9175
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.9175,
+            "sta": "FN04C"
         },
         {
-            "net": "7D",
             "lon": -124.6556,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN05C",
-            "lat": 46.8575
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8575,
+            "sta": "FN05C"
         },
         {
-            "net": "7D",
             "lon": -124.7313,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN06C",
-            "lat": 46.922
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.922,
+            "sta": "FN06C"
         },
         {
-            "net": "7D",
             "lon": -124.786,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN07C",
-            "lat": 46.8554
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8554,
+            "sta": "FN07C"
         },
         {
-            "net": "7D",
             "lon": -124.876,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN08C",
-            "lat": 46.8887
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8887,
+            "sta": "FN08C"
         },
         {
-            "net": "7D",
             "lon": -124.8872,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN09C",
-            "lat": 46.8402
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8402,
+            "sta": "FN09C"
         },
         {
-            "net": "7D",
             "lon": -124.9935,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN10C",
-            "lat": 46.8981
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8981,
+            "sta": "FN10C"
         },
         {
-            "net": "7D",
             "lon": -124.7248,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN18C",
-            "lat": 46.7001
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.7001,
+            "sta": "FN18C"
         },
         {
-            "net": "7D",
             "lon": -124.4506,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J57C",
-            "lat": 47.0804
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 47.0804,
+            "sta": "J57C"
         },
         {
-            "net": "7D",
             "lon": -124.9642,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN14C",
-            "lat": 47.0249
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 47.0249,
+            "sta": "FN14C"
         },
         {
-            "net": "7D",
             "lon": -125.119,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN12C",
-            "lat": 46.8887
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8887,
+            "sta": "FN12C"
         },
         {
-            "net": "7D",
             "lon": -125.0454,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN11C",
-            "lat": 46.8205
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8205,
+            "sta": "FN11C"
         },
         {
-            "net": "7D",
             "lon": -125.0005,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN17C",
-            "lat": 46.6816
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.6816,
+            "sta": "FN17C"
         },
         {
-            "net": "7D",
             "lon": -125.2987,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J50C",
-            "lat": 46.6411
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.6411,
+            "sta": "J50C"
         },
         {
-            "net": "7D",
             "lon": -125.5001,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN16C",
-            "lat": 46.8005
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.8005,
+            "sta": "FN16C"
         },
         {
-            "net": "7D",
             "lon": -125.3011,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "FN13C",
-            "lat": 47.0004
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 47.0004,
+            "sta": "FN13C"
         },
         {
-            "net": "7D",
             "lon": -125.5346,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J58C",
-            "lat": 47.3178
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 47.3178,
+            "sta": "J58C"
         },
         {
-            "net": "7D",
             "lon": -126.4168,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J59C",
-            "lat": 47.5111
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 47.5111,
+            "sta": "J59C"
         },
         {
-            "net": "7D",
             "lon": -126.1631,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J51C",
-            "lat": 46.7957
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 46.7957,
+            "sta": "J51C"
         },
         {
-            "net": "7D",
             "lon": -125.2991,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J42C",
-            "lat": 45.9323
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 45.9323,
+            "sta": "J42C"
         },
         {
-            "net": "7D",
             "lon": -124.9261,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "M06C",
-            "lat": 45.5287
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 45.5287,
+            "sta": "M06C"
         },
         {
-            "net": "7D",
             "lon": -125.4152,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J34C",
-            "lat": 45.306999999999995
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 45.306999999999995,
+            "sta": "J34C"
         },
         {
-            "net": "7D",
             "lon": -125.4653,
-            "chan": "HHZ",
             "loc": "",
-            "sta": "J26C",
-            "lat": 44.6534
+            "net": "7D",
+            "chan": "HHZ",
+            "lat": 44.6534,
+            "sta": "J26C"
         }
-    ]
+    ],
+    "name": "scnl_data"
 }

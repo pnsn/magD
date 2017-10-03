@@ -1,12 +1,13 @@
 '''class for managing channel data (scnls)
-  
+
 '''
 import math
 import pandas as pd
 
 class Scnl:
-  collection =[]
-  def __init__(self,sta,chan,net,loc="",samprate=None,lat=None,lon=None, depth=None, inst_id=None, desc=None):
+  collections ={}
+  def __init__(self,sta,chan,net,loc="",samprate=None,lat=None,lon=None,
+                    depth=None,data_set=None, inst_id=None,desc=None):
       self.sta=sta
       self.chan=chan
       self.net=net
@@ -22,9 +23,12 @@ class Scnl:
       self.df=None
       self.powers = []
       self.frequencies = []
-      Scnl.collection.append(self)
-  
-  
+      self.solutions=0
+      self.data_set=data_set
+      Scnl.add_to_collections(self)
+
+
+
 # #TODO make noise dataframe
 #
 #   '''create dataframe of noise from iris pdf xml
@@ -36,7 +40,7 @@ class Scnl:
 #       for i in range(int(sample.attrib["hits"]))
 #         data.append((float(sample.attrib["freq"]), float(sample.attrib["power"])))
 #     self.df =pd.DataFrame(d, columns=('freq', 'power'))
-
+# def make_scnl_dataframe(xml):
 
 
   '''Accepts list of noise buckets, see iris.py for structure
@@ -68,8 +72,8 @@ class Scnl:
   '''For frequency, what is the associated modal power?
       with pdf noise input set modes (power with > hits)
       freq0 and base are used to index the powers(list) for a
-      O(1) lookup so freq? index= log(freq?/freq[0], freq[1]/freq[0]) returns the index
-      to power
+      O(1) lookup so freq? index= log(freq?/freq[0], freq[1]/freq[0])
+      returns the index to power
   '''
   def frequency_power(self, freq):
     return self.powers[int(round(math.log(freq/self.freq0, self.base)))]
@@ -93,17 +97,47 @@ class Scnl:
         index=i
         break
     return index
+  @classmethod
+  #in place sort collection
+  def sort_by_solutions(cls):
+      for key in cls.collections:
+          cls.collections[key].sort(key=lambda x: x.solutions, reverse=True)
 
   #create a dictionary for json output
+  #FIXME this needs to change to collections object
   @classmethod
   def collection_to_dict(cls):
     col={"name": "scnl_data", "scnls": []}
     for scnl in Scnl.collection:
-      col["scnls"].append({"sta": scnl.sta, "chan": scnl.chan, "net": scnl.net, 
+      col["scnls"].append({"sta": scnl.sta, "chan": scnl.chan, "net": scnl.net,
            "loc": scnl.loc, "lat": scnl.lat, "lon": scnl.lon})
     return col
-      
-        
-
-       
-      
+  @classmethod
+  def get_xyz_lists(cls,key):
+    lats=[]
+    lons=[]
+    sols=[]
+    for scnl in cls.collections[key]:
+        lats.append(scnl.lat)
+        lons.append(scnl.lon)
+        sols.append(scnl.solutions)
+    return lats, lons, sols
+  @classmethod
+  # Assumes sorted. Find the index  where
+  #Scnls did not contribute
+  def get_no_solution_index(cls,key):
+      i=0
+      for scnl in cls.collections[key]:
+          if scnl.solutions > 0:
+              i+=1
+              next
+          else:
+              break
+      return i
+  @classmethod
+  #add scnl to collection keyed on data_set
+  def add_to_collections(cls, obj):
+     if obj.data_set in cls.collections:
+         cls.collections[obj.data_set].append(obj)
+     else:
+         cls.collections[obj.data_set]=[obj]

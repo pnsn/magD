@@ -1,6 +1,6 @@
 ''' 
-  routine for noise analysis of Ocean Bottom Seismometers (obs)
-  that will do profound things 
+  routine for noise analysis of Ocean Bottom Seismometers
+  plots min mode vs freq
 
 '''
 # import math
@@ -35,7 +35,7 @@ def main(args=None):
     """The main routine."""
     confParse = configparser.ConfigParser()
     confParse.read("config/config.ini")
-    parser = argparse.ArgumentParser(description="A script to plot noise profiles for obs's")
+    parser = argparse.ArgumentParser(description="A script to plot min mode vs depth for obs's")
     parser.add_argument('-i','--input', help='Input file name',required=True)
     
     args = parser.parse_args()## show values ##
@@ -74,36 +74,45 @@ def main(args=None):
           #find min and max index and slice
           min_i=scnl.find_min_index(SPECTRAL_FREQ[-1])
           max_i=scnl.find_max_index(SPECTRAL_FREQ[0])
-          # print scnl.frequencies[min_i:max_i]
+          #find min value in powers
+          min_mode=scnl.powers[min_i]
+          k=0
+          min_index=k
+          for k, p in enumerate(scnl.powers[min_i:max_i]):
+            if p < min_mode:
+              min_mode=p
+              min_index=k
+          print(min_mode)
+          print(min_index)
           trace = go.Scatter(
-            x = scnl.frequencies[min_i:max_i],
-            y = scnl.powers[min_i:max_i],
-            mode = 'lines',
+            y= min_mode,
+            x = scnl.frequencies[min_i:max_i][min_index],
+            mode = 'markers',
             name = "{} ({})".format(scnl.sta,scnl.inst_id)
           )
           fig.append_trace(trace, row, col)
           # data.append(trace)
 
-      #predicted curve
-      tremor_trace = go.Scatter(
-        x = SPECTRAL_FREQ,
-        y = SPECTRAL_POWER,
-        mode = 'lines+markers',
-        name = 'Tremor Profile',
-        line = dict(
-          color = ('rgb(205, 12, 24)'),
-          width = 4,
-          dash = 'dash'
-          )
-        )
-      # layout = dict(
-      #               xaxis = dict(title = 'Hertz'),
-      #               yaxis = dict(title = 'Power (db)'),
-      #               )
-      fig.append_trace(tremor_trace, row, col)
-      # data.append(tremor_trace)
-      # subfig = dict(data=data, layout=layout)
-    filename="obs-noise-profile-{}".format(experiment)
+      # #predicted curve
+#       tremor_trace = go.Scatter(
+#         x = SPECTRAL_FREQ,
+#         y = SPECTRAL_POWER,
+#         mode = 'lines+markers',
+#         name = 'Tremor Profile',
+#         line = dict(
+#           color = ('rgb(205, 12, 24)'),
+#           width = 4,
+#           dash = 'dash'
+#           )
+#         )
+#       # layout = dict(
+#       #               xaxis = dict(title = 'Hertz'),
+#       #               yaxis = dict(title = 'Power (db)'),
+#       #               )
+#       fig.append_trace(tremor_trace, row, col)
+#       # data.append(tremor_trace)
+#       # subfig = dict(data=data, layout=layout)
+    filename="obs-min_mode-v-freq-{}".format(experiment)
     py.plot(fig, filename=filename)
 
 
