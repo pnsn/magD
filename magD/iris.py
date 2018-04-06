@@ -7,7 +7,7 @@
 from urllib.request import urlopen
 import urllib.error
 import xml.etree.ElementTree as etree
-import xml.etree.cElementTree as ET
+# import xml.etree.cElementTree as ET
 # from scnl import Scnl
 from pprint import pprint
 
@@ -23,36 +23,41 @@ where code is HTTP response, 2dim list contains:
 
 '''
 
-
-def get_fdsn(sta_string, chan_string,net_string):
+def get_fdsn(sta_string, chan_string, net_string, loc_string="--"):
     stations=[]
     url ="http://service.iris.edu/fdsnws/station/1/query?net=" + net_string + \
-        "&sta=" + sta_string + "&loc=*&cha=" + chan_string + "&level=channel" \
-        "&format=xml&includecomments=true&nodata=404"
+        "&sta=" + sta_string + "&loc=" +loc_string + "&cha=" + chan_string + \
+         "&level=channel&format=xml&includecomments=true&nodata=404"
+    # print(url)
     try:
         fdsn_resp = urlopen(url)
     except urllib.error.HTTPError as err:
         return {"code": err, "data": [] }
-
     ns="{http://www.fdsn.org/xml/station/1}"
-    tree = ET.parse(fdsn_resp)
+    tree = etree.parse(fdsn_resp)
     root = tree.getroot()
     #for each network
     for network in root.findall("%sNetwork"%ns):
         net=network.attrib['code']
         #for each station
         for station in network.findall("%sStation"%ns):
+            # print(etree.tostring(station))
             sta= station.attrib['code']
             #ensure we only return on channel per site.
             #use precendence of chan_string with first station
-            #having more weight than the next.Ensure type of GEOPHYSICAL since
+            #having more weight than the next.Ensure type of GEOPHYSICAL or
+            #CONTINOUS since
             #type=TRIGGERED will not have PDF
+            #FIXME commenting out the Type for now since some legit channels
+            #don't have this tag
             prefchan=[]
             for chan in chan_string.split(","):
-                prefchan=station.findall("%sChannel[@code='%s'][%sType='GEOPHYSICAL']"%(ns,chan,ns))
+                prefchan=station.findall("%sChannel[@code='%s']"%(ns,chan))
+                # prefchan=station.findall("%sChannel[@code='%s'][%sType='GEOPHYSICAL']"%(ns,chan,ns))
+                # if len(prefchan)==0:
+                #     prefchan=station.findall("%sChannel[@code='%s'][%sType='CONTINUOUS']"%(ns,chan,ns))
                 if len(prefchan) > 0:
                     break
-
             if len(prefchan) > 0:
                 channel=prefchan[0]
                 chan=channel.attrib['code']
@@ -67,10 +72,7 @@ def get_fdsn(sta_string, chan_string,net_string):
                         samp=float(node.find('%sSampleRate'%ns).text)
                     if node.find('%sDepth'%ns) is not None:
                         depth=float(node.find('%sDepth'%ns).text)
-                    # if node.find('%sBeginEffectiveTime'%ns) is not None:
-                    #     on_date=float(node.find('%sBeginEffectiveTime'%ns).text)
-                    # if node.find('%sEndEffectiveTime'%ns) is not None:
-                    #     off_date=float(node.find('%sEndEffectiveTime'%ns).text)
+
                 #create new Scnl for each
                 if lon is not None and lon is not None and samp is not None:
                   stations.append([sta,chan,net,loc,lat,lon,depth,"","",samp])
@@ -99,7 +101,7 @@ def get_noise_pdf(sta,chan,net,starttime,endtime):
                                         chan, starttime, endtime)
     try:
       xml_file = urlopen(url)
-      tree2 = ET.parse(xml_file)
+      tree2 = etree.parse(xml_file)
       root2 = tree2.getroot()
       return {'code': xml_file.getcode(), 'data': root2.findall("Histogram")[0].getchildren()}
     except urllib.error.HTTPError as err:

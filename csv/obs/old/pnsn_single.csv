@@ -1,0 +1,2 @@
+sta,chan,net,loc,lat,lon,depth,on_date,off_date,rate
+BABR,BHZ,UW,--,44.5,-124.5,0.0,,,40.0

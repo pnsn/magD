@@ -1,6 +1,6 @@
-''' 
+'''
   routine for noise analysis of Ocean Bottom Seismometers (obs)
-  that will do profound things 
+  that will do profound things
 
 '''
 # import math
@@ -8,7 +8,7 @@ import sys
 import os
 import argparse
 from pandas import DataFrame, read_csv
-import pandas as pd 
+import pandas as pd
 import re
 import configparser
 import math
@@ -37,15 +37,15 @@ def main(args=None):
     confParse.read("config/config.ini")
     parser = argparse.ArgumentParser(description="A script to plot noise profiles for obs's")
     parser.add_argument('-i','--input', help='Input file name',required=True)
-    
+
     args = parser.parse_args()## show values ##
     print("Input file: {}".format(args.input))
     match =re.search(r'\/[^\.]*', args.input)
     experiment= match.group()[1:] #remove slash
-   
+
     df_stas = pd.read_csv(args.input)
     config = confParse[experiment]
-    
+
     dates =  config["dates"].split()
     #expected tremor signal
     SPECTRAL_FREQ=[10.0, 5.0, 3.3, 2.5, 2.0, 1.67, 1.43, 1.25, 1.11, 1]
@@ -63,7 +63,7 @@ def main(args=None):
       Scnl.collection=[]
       for j, r in df_stas.iterrows():
           Scnl(r.sta, r.chan, "7D","",r.rate, r.lat, r.lon, r.depth, r.inst_id, r.desc)
-      
+
       # print("data = {}".format(data))
       for scnl in Scnl.collection:
         print("STA {}, CHAN {}".format(scnl.sta, scnl.chan))
@@ -109,4 +109,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-    

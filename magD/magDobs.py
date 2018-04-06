@@ -1,4 +1,4 @@
-# run with python
+#saving this as is it was for OBS experiment.
 # example:
 #python magD/magD.py -k  pnsn_onshore,cn_onshore,nc_onshore -o pnsn.png -p
 
