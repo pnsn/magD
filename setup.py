@@ -1,15 +1,17 @@
 from setuptools import setup
 
 setup(name='magD',
-      version='0.1.0',
+      version='0.9.0',
       packages=['magD'],
+      author='Jon Connolly',
+      author_email='joncon@uw.edu',
+      url='https://github.com/pnsn/magD',
+      python_requires='~-3.5.2',
+      dependency_links=['https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz'],
       install_requires=[
-          "numpy"
-          ],
-      entry_points={
-          'console_scripts': [
-              'magD = magD.magD.py',
-              'obs = obs.obs.py'
-          ]
-     },
+          'numpy',
+          'pandas',
+          'matplotlib',
+        ],
+
 )

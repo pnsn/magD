@@ -1,6 +1,3 @@
-# #to install basemap on osx
-# #brew install geos
-# # pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
 import math
 import pandas as pd
 import configparser
@@ -8,18 +5,20 @@ import numpy as np
 import json
 import csv
 
-from origin import Origin
-from scnl import Scnl
-from seis import *
-from iris import get_noise_pdf
+from .origin import Origin
+from .scnl import Scnl
+from .seis import *
+from .iris import get_noise_pdf
 
 
 class MagD:
+    conf=None
     def __init__(self, config_path):
-        #all class levels attrs set in main
-        self.conf = configparser.ConfigParser()
-        self.conf.read(config_path)
-        c=self.conf['main']
+        if MagD.conf==None:
+            MagD.conf= configparser.ConfigParser()
+            MagD.conf.read(config_path)
+
+        c=MagD.conf['main']
         self.grid_resolution=float(c['grid_resolution'])
         self.lat_min=float(c['lat_min']) + self.grid_resolution
         self.lat_max=float(c['lat_max'])
@@ -58,10 +57,10 @@ class MagD:
 
     def get_noise(self):
         #iterate through all keys but main
-        data_keys=self.conf.sections()
+        data_keys=MagD.conf.sections()
         data_keys.remove('main')
         for key in data_keys:
-            conf=self.conf[key]
+            conf=MagD.conf[key]
             path=conf['fdsn_csv_path']
             df_stas = pd.read_csv(path)
             #instantiate Scnl from each station
@@ -186,8 +185,8 @@ class MagD:
                 if scnl.solutions==0:
                     percent="N/A"
                 else:
-                    c=(calcs/scnl.solutions)*100
-                    percent="%.2f%"%c
+                    c=(scnl.solutions/calcs)*100
+                    percent="%.2f%%"%c
                 sta=scnl.sta
                 while len(sta) < 4:
                     sta=sta + " "
@@ -199,7 +198,7 @@ class MagD:
 
     '''for set return lat,lon, and solutions
         as three unique lists'''
-    def get_xyz_lists(key):
+    def get_xyz_lists(self,key):
       lats=[]
       lons=[]
       sols=[]
@@ -210,19 +209,19 @@ class MagD:
       return lats, lons, sols
 
 
-      '''Assumes sorted! Find the index  where Scnls did not contribute.
-        Find where # of solutions ==0, everything to the right of that
-        will be 0 if sorted
-      '''
-      def get_no_solution_index(self,key):
-          i=0
-          for scnl in self.sncl_collections()[key]:
-              if scnl.solutions > 0:
-                  i+=1
-                  next
-              else:
-                  break
-          return i
+    '''Assumes sorted! Find the index  where Scnls did not contribute.
+    Find where # of solutions ==0, everything to the right of that
+    will be 0 if sorted
+    '''
+    def get_no_solution_index(self,key):
+      i=0
+      for scnl in self.scnl_collections()[key]:
+          if scnl.solutions > 0:
+              i+=1
+              next
+          else:
+              break
+      return i
 
 
 

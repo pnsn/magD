@@ -6,15 +6,19 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
+import datetime
 
 
-from magD import MagD
+from .magD import MagD
 
 class PlotMagD():
     def __init__(self, magD, outfile):
         self.magD=magD
         self.outfile=outfile
 
+    #return plot object
+    def plot(self):
+        return plt
 
     #returns center of map based on config min/max
     def map_center(self):
@@ -22,26 +26,42 @@ class PlotMagD():
         lon=0.5*(self.magD.lon_max-self.magD.lon_min) + self.magD.lon_min
         return lat,lon
 
-    #create fig obj, width, height in inches
-    def figure(self, width, height):
-        return plt.figure(figsize=(width,height))
 
-    #create basemap
-    def basemap(self,projection='merc'):
-        lat_0,lon_0=self.map_center
-        return Basemap(llcrnrlon=lon_min+2,llcrnrlat=lat_min+2,urcrnrlon=lon_max-2,
-                    urcrnrlat=lat_max-2, resolution='i',projection=projection,
+    '''
+        create basemap with bounding cords
+        (lat_min, lat_max, lon_min, lon_max)
+        and projection
+    '''
+    def basemap(self,bounds,projection='merc'):
+        lat_0,lon_0=self.map_center()
+        return Basemap(llcrnrlon=bounds[2]+2,llcrnrlat=bounds[0]+2,urcrnrlon=bounds[3]-2,
+                    urcrnrlat=bounds[1]-2, resolution='i',projection=projection,
                     lon_0=lon_0,lat_0=lat_0)
 
 
     #returns X,Y,Z and levels (list of contours)
-    def create_contour_levels(self):
-        z=[o.min_detection(num_stas) for o in  magD.origin_collection]
+    def create_contour_levels(self, num_detections, map):
+        z=[o.min_detection(num_detections) for o in  self.magD.origin_collection()]
         npz=np.asarray(z)
-        Z=np.reshape(npz, ((len(magD.lat_list), len(magD.lon_list))))
-        X,Y=m(*np.meshgrid(magD.lon_list,magD.lat_list))
-        #create list of floats from min max mag
+        Z=np.reshape(npz, ((len(self.magD.lat_list()), len(self.magD.lon_list()))))
+        X,Y=map(*np.meshgrid(self.magD.lon_list(),self.magD.lat_list()))
+        # #create list of floats from min max mag
         mag_min=int(np.amin(npz)*10)
         mag_max=int(np.amax(npz)*10)
         levels=[x / 10.0 for x in range(mag_min, mag_max, 2)]
         return X,Y,Z,levels
+
+    def meridian_interval(self,lon_min,lon_max):
+        return np.linspace(lon_min,lon_max,4,dtype = int)
+
+    def parallel_interval(self,lat_min,lat_max):
+        return np.linspace(lat_min,lat_max,4,dtype = int)
+
+    #make outfile unique to avoid clobbering
+    def outfile_with_stamp(self,outfile):
+        return "{}-{}.png".format(outfile,
+            datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+
+    #for key what is plot color in config
+    def plot_color_label(self,key):
+        return MagD.conf[key]['color'], MagD.conf[key]['label']
