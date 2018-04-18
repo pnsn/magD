@@ -97,8 +97,10 @@ class Scnl:
         index=i
         break
     return index
+
+
   @classmethod
-  #in place sort collection
+  #in place sort collections
   def sort_by_solutions(cls):
       for key in cls.collections:
           cls.collections[key].sort(key=lambda x: x.solutions, reverse=True)
@@ -106,36 +108,15 @@ class Scnl:
   #create a dictionary for json output
   #FIXME this needs to change to collections object
   @classmethod
-  def collection_to_dict(cls):
+  def collections_to_dict(cls):
     col={"name": "scnl_data", "scnls": []}
-    for scnl in Scnl.collection:
+    for scnl in Scnl.collections:
       col["scnls"].append({"sta": scnl.sta, "chan": scnl.chan, "net": scnl.net,
            "loc": scnl.loc, "lat": scnl.lat, "lon": scnl.lon})
     return col
+
   @classmethod
-  def get_xyz_lists(cls,key):
-    lats=[]
-    lons=[]
-    sols=[]
-    for scnl in cls.collections[key]:
-        lats.append(scnl.lat)
-        lons.append(scnl.lon)
-        sols.append(scnl.solutions)
-    return lats, lons, sols
-  @classmethod
-  # Assumes sorted. Find the index  where
-  #Scnls did not contribute
-  def get_no_solution_index(cls,key):
-      i=0
-      for scnl in cls.collections[key]:
-          if scnl.solutions > 0:
-              i+=1
-              next
-          else:
-              break
-      return i
-  @classmethod
-  #add scnl to collection keyed on data_set
+  #add scnl to collections keyed on data_set
   def add_to_collections(cls, obj):
      if obj.data_set in cls.collections:
          cls.collections[obj.data_set].append(obj)

@@ -13,14 +13,13 @@ class Origin:
   def __init__(self, lat, lon):
       self.lat = lat
       self.lon = lon
+      #asc ordered tuples by mag (mag,scnl)
       self.detections = []
       Origin.collection.append(self)
 
   '''
-      insert by asc mag order  detections
-      takes a tuple of (mag, scnl )
-      where mag is float and scnl is instance
-      of class Scnl
+      insert by asc mag order  detections takes a tuple of (mag, scnl )
+      where mag is float and scnl is instance of class Scnl
   '''
 
   def insertDetection(self, detection):
@@ -31,22 +30,27 @@ class Origin:
       index += 1
     self.detections.insert(index, detection)
 
-  '''Use index of list to pull out min magnitude detection
-    Assumes list is sorted'''
+  '''
+    Use index of list to pull out min magnitude detection
+    Assumes list is sorted
+  '''
 
   def min_detection(self, num_stas):
     return self.detections[num_stas - 1][0]
 
-  '''slice list from 0 to min detection'''
+  '''
+    slice list from 0 to min detection
+  '''
 
   def slice_detections(self, num_stas):
     return [x[1].sta for x in self.detections][0:num_stas]
 
-  '''Find all scnls that are part of the num_stas solution, increment
-    and return sorted by number of solutions reversed.
+  '''
+    Go through each origin and tally up each station that contributed
+    to a solution. Only go to the index < num_stas since we are only want stations
+    that are part of {num_stas} solution.
   '''
   @classmethod
-  # increment scnls on contribution to solutions
   def increment_solutions(cls,num_stas):
       for o in cls.collection:
           i=0
@@ -55,7 +59,7 @@ class Origin:
                   scnl.solutions+=1
               i+=1
 
-
+  #FIXME? This is not being used anymore
   @classmethod
   def build_map_grid(cls,lats,lons,num_stas,with_stas=False):
     grid={}
@@ -87,7 +91,7 @@ class Origin:
 
 
 
-
+  #FIXME: Do we need this? It's not being used
   @classmethod
   def build_geojson_feature_collection(cls,lats,lons, num_stas):
     # convert our data grid to GeoJSON

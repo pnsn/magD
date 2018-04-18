@@ -1,0 +1,4 @@
+sta,chan,net,loc,lat,lon,depth,on_date,off_date,rate
+SOS,EHZ,UW,,46.243858,-122.137871,0.0,,,100.0
+RNO,EHZ,UW,,43.916199,-123.72496,0.0,,,100.0
+IONE,EHZ,UW,,45.498032,-119.827827,0.0,,,100.0

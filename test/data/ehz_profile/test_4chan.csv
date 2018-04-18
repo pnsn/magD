@@ -1,0 +1,4 @@
+sta,chan,net,loc,lat,lon,depth,on_date,off_date,rate
+GLDO,EHZ,UW,,45.838779,-120.814789,0.0,,,100.0
+OSD,EHZ,UW,,47.816238,-123.705109,0.0,,,100.0
+OT3,EHZ,UW,,46.668861,-119.234131,0.0,,,100.0

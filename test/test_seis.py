@@ -7,14 +7,14 @@ from magD.scnl import Scnl
 
 class TestSeis(unittest.TestCase):
     # def setUp(self):
-    
+
     # def tearDown(self):
-    
+
     # def test_find_station(self):
-    
+
     # def test_find_station_codes(self):
-        
+
     # def test_create_station_object(self):
     #     self.assertTrue(15, station_object[code][0])
-        
+
     def test_df
