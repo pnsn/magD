@@ -91,16 +91,11 @@ class MagD:
             self.scnl_collections()[key] =[s for s in self.scnl_collections()[key] if s.powers !=None]
             post_len=len(self.scnl_collections()[key])
             if pre_len !=post_len:
-                print("{} channel(s) found without noise pdfs".format(pre_len-post_len))
-
-            #if #of stas < num_sta_detection use total num of stas
-            # num_stas=min(len(Scnl.collections), int(conf['num_sta_detection']))
-            #num_stas=int(conf['num_sta_detection'])
-            #for every point in grid
+                print("{} channel(s) found without noise pdf".format(pre_len-post_len))
 
     def find_detections(self):
         for lat in self.lat_list():
-            print(lat)
+            # print(lat)
             for lon in self.lon_list():
                 origin = Origin(lat,lon)
                 mindetect = []
@@ -113,7 +108,7 @@ class MagD:
                             start_period = 0.001
                             end_period = 280
 
-                            # Goes through all the freqs, i.e. from small to large Mw
+                            #Goes through all the freqs, i.e. from small to large Mw
                             #this way the first detection will be the min Mw
                             period = start_period
                             # origin = (source.lat, source.lon)
@@ -179,7 +174,7 @@ class MagD:
 
 
         for key in self.scnl_collections():
-            print("Data set {}".format(key))
+            #print("Data set {}".format(key))
             for scnl in self.scnl_collections()[key]:
                 #do some formating
                 if scnl.solutions==0:

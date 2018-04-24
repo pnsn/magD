@@ -107,7 +107,7 @@ def get_noise_pdf(sta,chan,net,starttime,endtime):
     except urllib.error.HTTPError as err:
       if err.code == 404:
          print("404 error: %s for scnl: %s:%s:%s"%(err,sta, chan, net))
-         print("using url %s"%url)
+         # print("using url %s"%url)
          return None
       else:
         print("error: {}".format(url))
