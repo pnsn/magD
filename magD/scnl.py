@@ -6,7 +6,7 @@ import pandas as pd
 
 class Scnl:
   collections ={}
-  def __init__(self,sta,chan,net,loc="",samprate=None,lat=None,lon=None,
+  def __init__(self,sta,chan,net,loc,samprate=None,lat=None,lon=None,
                     depth=None,data_set=None, inst_id=None,desc=None):
       self.sta=sta
       self.chan=chan

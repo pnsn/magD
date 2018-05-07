@@ -2,7 +2,7 @@
 # usage:
 #to install basemap on osx
 #brew install geos
-# pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
+#pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
@@ -12,9 +12,8 @@ import datetime
 from .magD import MagD
 
 class PlotMagD():
-    def __init__(self, magD, outfile):
+    def __init__(self, magD):
         self.magD=magD
-        self.outfile=outfile
 
     #return plot object
     def plot(self):
@@ -38,18 +37,29 @@ class PlotMagD():
                     urcrnrlat=bounds[1]-2, resolution='i',projection=projection,
                     lon_0=lon_0,lat_0=lat_0)
 
+    '''
+        contour levels: min,max and steps
+        create array of floats from min to max in steps of step
+    '''
+    def create_contour_levels(self, z, step):
+        mag_min=int(np.amin(z)*10)
+        mag_max=int(np.amax(z)*10)
+        levels=[x / 10.0 for x in range(mag_min, mag_max, step)]
+        return levels
 
-    #returns X,Y,Z and levels (list of contours)
-    def create_contour_levels(self, num_detections, map):
-        z=[o.min_detection(num_detections) for o in  self.magD.origin_collection()]
-        npz=np.asarray(z)
-        Z=np.reshape(npz, ((len(self.magD.lat_list()), len(self.magD.lon_list()))))
-        X,Y=map(*np.meshgrid(self.magD.lon_list(),self.magD.lat_list()))
-        # #create list of floats from min max mag
-        mag_min=int(np.amin(npz)*10)
-        mag_max=int(np.amax(npz)*10)
-        levels=[x / 10.0 for x in range(mag_min, mag_max, 2)]
-        return X,Y,Z,levels
+    '''
+        For given list of z values create matrix of len(lats) x len(lons)
+    '''
+    def mag_matrix(self,z):
+        z=np.asarray(z)
+        return np.reshape(z, ((len(self.magD.lat_list()), len(self.magD.lon_list()))))
+
+    '''
+        project x,y onto map coordinates
+        returns x,y projected coords
+    '''
+    def project_x_y(self,map):
+        return map(*np.meshgrid(self.magD.lon_list(),self.magD.lat_list()))
 
     def meridian_interval(self,lon_min,lon_max):
         return np.linspace(lon_min,lon_max,4,dtype = int)
@@ -58,8 +68,8 @@ class PlotMagD():
         return np.linspace(lat_min,lat_max,4,dtype = int)
 
     #make outfile unique to avoid clobbering
-    def outfile_with_stamp(self,outfile):
-        return "{}-{}.png".format(outfile,
+    def outfile_with_stamp(self,name):
+        return "{}-{}.png".format(name,
             datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
 
     #for key what is plot color in config

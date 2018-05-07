@@ -4,6 +4,9 @@ import configparser
 import numpy as np
 import json
 import csv
+import pickle
+import pathlib
+import re
 
 from .origin import Origin
 from .scnl import Scnl
@@ -19,6 +22,8 @@ class MagD:
             MagD.conf.read(config_path)
 
         c=MagD.conf['main']
+        self.name=c['name']
+        self.title=c['title']
         self.grid_resolution=float(c['grid_resolution'])
         self.lat_min=float(c['lat_min']) + self.grid_resolution
         self.lat_max=float(c['lat_max'])
@@ -29,7 +34,19 @@ class MagD:
         self.mu =float(c['mu']) #3e11
         self.qconst = float(c['qconst']) #300.0
         self.beta = float(c['beta']) #3.5  # km/s
+        self.pickle_dir=c['pickle_dir']
         self.summary_mag_list=[]
+        self.plot_mag_min=float(c['plot_mag_min'])
+        self.plot_mag_max=float(c['plot_mag_max'])
+        if not c['output']=='verbose':
+            self.output=None
+        else:
+            self.output='verbose'
+
+        if len(c['diff_with'])==0:
+            self.diff_with=None
+        else:
+            self.diff_with=c['diff_with']
 
 
 
@@ -54,48 +71,113 @@ class MagD:
     def origin_collection(self):
         return Origin.collection
 
+    '''return 1dim list of mag levels used for contouring'''
+    def get_mag_grid(self):
+        return [o.min_detection(self.num_detections) for o in  self.origin_collection()]
+
+    '''save mag_grid to compare/diff with another. Uses name of config file'''
+    def pickle_mag_grid(self):
+        dir="mag_grid"
+        pickle_path=self.get_pickle_grid_path(dir,self.name,self.grid_resolution)
+        self.set_pickle(pickle_path, self.get_mag_grid())
+
+    '''retrieve mag_grid for diff with current run. Must use same size lists'''
+    def unpickle_mag_grid(self,dir,name,resolution):
+        pickle_path=get_pickle_grid_path(dir,name,resolution)
+        return get_pickle(pickle_path)
+
+
+    def print_noise_not_found(self,sta,chan,loc,net,startime,endtime,code):
+      print("{}:{}:{}:{} startime: {}, endtime {} returned HTTP code {}".format(
+              sta,chan,loc,net,startime,endtime,code))
+
+    def set_pickle(self,path, data):
+      #create pickle_dirs if they don't exist
+      directory=re.search(r'\.\/.*\/',path).group()
+      pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+      with open(path, 'wb') as f:
+          pickle.dump(data, f)
+
+    def get_pickle(self,path):
+      try:
+          with open(path, 'rb') as p:
+              return pickle.load(p)
+      except FileNotFoundError:
+          raise
+
+
+    def get_pickle_noise_path(self,dir,sta,chan,net,loc,start,end):
+      return "./{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(self.pickle_dir,
+                  dir,sta,chan,net,loc,start,end)
+
+    '''
+      create a path name to pickle mag grid must be of same length
+      for comparison so resolution added
+    '''
+    def get_pickle_grid_path(self,dir,name,resolution):
+      return "./{}/{}/{}-res-{}.pickle".format(self.pickle_dir,
+                  dir,name,resolution)
+
+    #Create Scnl collections, and assign power
 
     def get_noise(self):
-        #iterate through all keys but main
         data_keys=MagD.conf.sections()
         data_keys.remove('main')
+
         for key in data_keys:
             conf=MagD.conf[key]
-            path=conf['fdsn_csv_path']
+            path=conf['csv_path']
             df_stas = pd.read_csv(path)
             #instantiate Scnl from each station
             for i, row in df_stas.iterrows():
-              Scnl(row.sta, row.chan, row.net, row.loc,row.rate, row.lat,
-                row.lon, row.depth, key)
+                #loc is reserved, used location for column name
+                #blank locs are eval as NaN
+                if not isinstance(row.location, str) and math.isnan(float(row.location)):
+                    row.location="--"
+                Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
+                    row.lon, row.depth, key)
             for scnl in self.scnl_collections()[key]:
-                sta=scnl.sta
-                chan=scnl.chan
-                net=scnl.net
                 starttime=conf['starttime']
                 endtime=conf['endtime']
-                #Do we want to use a template, i.e. another noise-pdf?
-                #we still want to keep the orig lat/lon but use a template pdf
                 if "template_sta" in conf:
                     sta=conf['template_sta']
                     chan=conf['template_chan']
                     net=conf['template_net']
-                resp = get_noise_pdf(sta,chan,net,starttime,endtime)
-                if resp is not None:
-                    noise= resp['data']
-                    scnl.set_powers(noise)
-                else: #remove from collections
-                    scnl.powers=None
-
-            #Keep scnls with with pdfs
+                    loc=conf['template_loc']
+                else:
+                    sta =scnl.sta
+                    chan=scnl.chan
+                    net=scnl.net
+                    loc=scnl.loc
+                #try to load noise from pickle file,
+                #if not there go to iris
+                try:
+                    pickle_path= self.get_pickle_noise_path("noise",sta,chan,net,loc,
+                                starttime,endtime)
+                    data=self.get_pickle(pickle_path)
+                    scnl.set_powers(data)
+                except FileNotFoundError:
+                    resp = get_noise_pdf(sta,chan,net,loc,starttime,endtime)
+                    if resp['code'] ==200:
+                        self.set_pickle(pickle_path, resp['data'])
+                        scnl.set_powers(resp['data'])
+                    else: #remove from collections
+                        if self.output:
+                            self.print_noise_not_found(sta,chan,loc,net,starttime,endtime,resp['code'])
+                        scnl.powers=None
+            #remove scnls with no power
             pre_len=len(self.scnl_collections()[key])
             self.scnl_collections()[key] =[s for s in self.scnl_collections()[key] if s.powers !=None]
             post_len=len(self.scnl_collections()[key])
-            if pre_len !=post_len:
+            if pre_len !=post_len and self.output:
                 print("{} channel(s) found without noise pdf".format(pre_len-post_len))
+
+
 
     def find_detections(self):
         for lat in self.lat_list():
-            # print(lat)
+            if self.output:
+                print(lat)
             for lon in self.lon_list():
                 origin = Origin(lat,lon)
                 mindetect = []
@@ -123,7 +205,7 @@ class MagD:
                                 fc = 1/period
                                 fault_rad = fault_radius(fc, self.beta)
                                 Mo = moment(fault_rad)
-                                Mw = moment_magnitude(Mo)
+                                Mw = round(moment_magnitude(Mo),2)
                                 filtfc=signal_adjusted_frequency(Mw,fc)
                                 nyquist=scnl.samprate*self.nyquist_correction
 
