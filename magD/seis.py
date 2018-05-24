@@ -3,6 +3,7 @@ Module of functions specific to
 min detect algo
 '''
 import math
+from obspy.geodetics.base import gps2dist_azimuth as distaz
 
 #FIXME These should be network specific?
 # frequency dependent amplification factors based on the NEIC auto picker filters.
@@ -113,3 +114,48 @@ def min_detect(scnl, db, Mw, freq):
         mindetect = Mw
         return True
     return False
+
+'''
+       takes list of scnls(SNCL), and source(origin) and
+       determines azimuthal gap, (largest gap in degrees)
+       between each station and closest station
+
+       returns azimuthal gap in deg.
+       work counter clockwise
+
+
+               0
+               |
+         90  -   -  270
+               |
+              180
+
+        a is azimuth
+        b is back azimuth
+        determine az for each
+        reverse sort by az
+        largest=0
+        n - n-1, n-1 - n-2... n - 1 +360
+        if < 0; deg + 360
+        return shortest distance and largest az
+'''
+def dist_and_azimuthal_gap(scnls,source):
+    gaps=[]
+    #larger than earth's circumference
+    #do not use on Jupiter!
+    min_dist=50000.0
+    max_gap=0.0
+    for s in scnls:
+        dist,gap,bgap= distaz(s.lat,s.lon,source.lat,source.lon)
+        dist/=1000
+        if dist < min_dist:
+            min_dist=dist
+        gaps.append(gap)
+    gaps.sort(reverse=True)
+    #prepend last az + 360 to list
+    gaps.insert(0,gaps[-1]+360)
+    for i in range(len(gaps) -1):
+        gap=gaps[i]-gaps[i+1]
+        if gap > max_gap:
+            max_gap=gap
+    return min_dist,max_gap

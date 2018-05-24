@@ -13,25 +13,26 @@ from magD.scnl import Scnl
 
 
 class TestOrigin(unittest.TestCase):
-    
+
   """Test obj creation"""
   def test_obj_creation(self):
+    #clear the pipes
     Origin.collection=[]
     for lat in range(10):
       Origin(lat, -122)
     self.assertEqual(len(Origin.collection), 10)
-  
+
   """Test insert order"""
   def test_insert_order(self):
     Origin.collection=[]
-    
+
     o=Origin(45, -122)
     scnl0=Scnl("sta", "chan", "net")
     scnl1=Scnl("sta1", "chan", "net")
     scnl2=Scnl("sta2", "chan", "net")
     scnl3=Scnl("sta3", "chan", "net")
 
-    
+
     o.insertDetection((3,scnl0))
     self.assertEqual(len(o.detections),1)
     '''should move to front'''
@@ -43,18 +44,18 @@ class TestOrigin(unittest.TestCase):
     print(o.detections)
     self.assertEqual(len(o.detections),3)
     self.assertEqual(o.detections[2][1], scnl3)
-    
-  '''test num_stas indexing'''   
-    
+
+  '''test num_stas indexing'''
+
   # def test_number_stas_index(self):
   #   o=Origin(45, -122)
   #   scnl=Scnl("sta", "chan", "net")
   #   for mag in range(4,0,-1):
   #     o.insertDetection(mag,scnl)
   #   # self.assertEqual(o.min_detection(3), 3)
-          
 
-        
-   
+
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -25,6 +25,9 @@ class TestMagD(unittest.TestCase):
         self.assertEqual(magd.beta, 3.5)
 
 
+    def test_pickler(self):
+
+
     '''Simple test to check errors'''
     def test_find_noise_and_detections(self):
         magd=MagD("config/test.ini")

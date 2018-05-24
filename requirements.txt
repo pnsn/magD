@@ -2,3 +2,4 @@
 numpy
 plotly
 pandas
+obspy

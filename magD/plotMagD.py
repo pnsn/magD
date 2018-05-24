@@ -12,9 +12,13 @@ import datetime
 from .magD import MagD
 
 class PlotMagD():
-    def __init__(self, magD):
+    def __init__(self, magD, type):
         self.magD=magD
-
+        c=magD.conf['plot']
+        self.mag_min=float(c.get('mag_min'))
+        self.mag_max=float(c.get('mag_max'))
+        self.title=c.get('title')
+        self.type=type
     #return plot object
     def plot(self):
         return plt
@@ -48,11 +52,19 @@ class PlotMagD():
         return levels
 
     '''
-        For given list of z values create matrix of len(lats) x len(lons)
+        For turn vector(list) into matrix of len(lats) x len(lons)
+        if two vectors exist diff 
     '''
-    def mag_matrix(self,z):
-        z=np.asarray(z)
-        return np.reshape(z, ((len(self.magD.lat_list()), len(self.magD.lon_list()))))
+    def make_matrix(self,len_lat,len_lon):
+        other_vector=None
+        md=self.magD
+        vector=md.vector1
+        other_vector=md.vector2
+        if other_vector:
+            vector=[a - b  for a, b in zip(vector, other_vector)]
+        z=np.asarray(vector);
+        return np.reshape(z, (len_lat,len_lon))
+
 
     '''
         project x,y onto map coordinates
@@ -69,8 +81,8 @@ class PlotMagD():
 
     #make outfile unique to avoid clobbering
     def outfile_with_stamp(self,name):
-        return "{}-{}.png".format(name,
-            datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+        return "{}-{}-{}.png".format(name,
+            datetime.datetime.now().strftime("%Y%m%d%H%M%S"),self.type)
 
     #for key what is plot color in config
     def plot_color_label(self,key):

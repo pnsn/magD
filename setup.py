@@ -12,6 +12,8 @@ setup(name='magD',
           'numpy',
           'pandas',
           'matplotlib',
+          'obspy',
+          'geographiclib',
         ],
 
 )

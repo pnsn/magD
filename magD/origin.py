@@ -1,5 +1,5 @@
 '''
-Class for Mag origins
+Class for MagD origins
 Instanced are points in a grid and have
 lat, lon and asc list of sorted detectable magnitudes
 

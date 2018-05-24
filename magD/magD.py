@@ -5,8 +5,9 @@ import numpy as np
 import json
 import csv
 import pickle
-import pathlib
 import re
+from pathlib import Path
+
 
 from .origin import Origin
 from .scnl import Scnl
@@ -15,38 +16,38 @@ from .iris import get_noise_pdf
 
 
 class MagD:
-    conf=None
-    def __init__(self, config_path):
-        if MagD.conf==None:
-            MagD.conf= configparser.ConfigParser()
-            MagD.conf.read(config_path)
-
-        c=MagD.conf['main']
-        self.name=c['name']
-        self.title=c['title']
-        self.grid_resolution=float(c['grid_resolution'])
-        self.lat_min=float(c['lat_min']) + self.grid_resolution
-        self.lat_max=float(c['lat_max'])
-        self.lon_min=float(c['lon_min'])
-        self.lon_max=float(c['lon_max']) + self.grid_resolution
-        self.num_detections=int(c['num_detections'])
-        self.nyquist_correction= float(c['nyquist_corretion']) #0.4
-        self.mu =float(c['mu']) #3e11
-        self.qconst = float(c['qconst']) #300.0
-        self.beta = float(c['beta']) #3.5  # km/s
-        self.pickle_dir=c['pickle_dir']
+    '''
+        initialize with config file and profile type
+        for every sample point type is
+        detection (lowest detection)
+        gap (largest az gap out of reporting stations)
+        distance (closest station of n reporting stations)
+    '''
+    def __init__(self, config_path, type=None):
+        self.conf= configparser.ConfigParser()
+        self.conf.read(config_path)
+        c=self.conf['main']
+        self.name=c.get('name')
+        self.grid_resolution=c.getfloat('grid_resolution')
+        self.lat_min=c.getfloat('lat_min') + self.grid_resolution
+        self.lat_max=c.getfloat('lat_max')
+        self.lon_min=c.getfloat('lon_min')
+        self.lon_max=c.getfloat('lon_max') + self.grid_resolution
+        self.num_detections=c.getint('num_detections')
+        self.nyquist_correction= c.getfloat('nyquist_corretion') #0.4
+        self.mu =c.getfloat('mu') #3e11
+        self.qconst = c.getfloat('qconst') #300.0
+        self.beta = c.getfloat('beta') #3.5  # km/s
+        self.pickle_dir=c.get('pickle_dir')
+        #types: detection, az_gap
+        #stats on run
         self.summary_mag_list=[]
-        self.plot_mag_min=float(c['plot_mag_min'])
-        self.plot_mag_max=float(c['plot_mag_max'])
-        if not c['output']=='verbose':
-            self.output=None
-        else:
-            self.output='verbose'
-
-        if len(c['diff_with'])==0:
-            self.diff_with=None
-        else:
-            self.diff_with=c['diff_with']
+        self.verbose_output= c.getboolean('verbose_output')
+        #diff with existing vector?
+        self.diff_with=c.get('diff_with',None)
+        self.type=type
+        self.vector1=None
+        self.vector2=None
 
 
 
@@ -71,30 +72,60 @@ class MagD:
     def origin_collection(self):
         return Origin.collection
 
-    '''return 1dim list of mag levels used for contouring'''
-    def get_mag_grid(self):
-        return [o.min_detection(self.num_detections) for o in  self.origin_collection()]
+    '''return 1dim list of mag levels used for heat map'''
+    def build_detection_vector(self):
+        return [o.min_detection(self.num_detections)
+                for o in  self.origin_collection()]
 
-    '''save mag_grid to compare/diff with another. Uses name of config file'''
-    def pickle_mag_grid(self):
-        dir="mag_grid"
-        pickle_path=self.get_pickle_grid_path(dir,self.name,self.grid_resolution)
-        self.set_pickle(pickle_path, self.get_mag_grid())
+    '''
+        return 1dim list of tuples for heat map_center
+        tuple (dist,max_gap)
+        considers only stations that are part of the num_detections
+        solution:
+        dist is closest station in m
+        max_gap is azimuthal gap
+    '''
+    def build_distance_and_gap_vector(self):
+        distances=[]
+        gaps=[]
+        scnls=[]
+        for o in self.origin_collection():
+            #take 2nd element of detection tuple
+            scnls=[d[1] for d in o.detections[0:self.num_detections]]
+            distance,gap=dist_and_azimuthal_gap(scnls,o)
+            distances.append(distance)
+            gaps.append(gap)
+        return distances,gaps
 
-    '''retrieve mag_grid for diff with current run. Must use same size lists'''
-    def unpickle_mag_grid(self,dir,name,resolution):
-        pickle_path=get_pickle_grid_path(dir,name,resolution)
-        return get_pickle(pickle_path)
 
 
-    def print_noise_not_found(self,sta,chan,loc,net,startime,endtime,code):
-      print("{}:{}:{}:{} startime: {}, endtime {} returned HTTP code {}".format(
-              sta,chan,loc,net,startime,endtime,code))
+    # #combine both gap and distance
+    # def make_gap_distance_vector(self, vector):
+    #     #from Paul Bodin
+    #     #0.5*[(gap - gap/n)/360] + log(d)/3]
+    #     scored_vector=[]
+    #     for tup in vector:
+    #         gap=tup[0]
+    #         distance=tup[1]
+    #         gap=(gap-gap/self.num_detections)/360
+    #         print(distance)
+    #         score=0.5*(gap + math.log(distance)/3)
+    #         print(math.log(distance))
+    #         scored_vector.append(score)
+    #     return scored_vector
+
+
+    '''save detection_vector to compare/diff with another. Uses name from config file'''
+    def pickle_vector(self,dir,vector):
+        pickle_path=self.get_pickled_vector_path(dir,self.name,self.grid_resolution)
+        self.set_pickle(pickle_path, vector)
+
+
 
     def set_pickle(self,path, data):
       #create pickle_dirs if they don't exist
-      directory=re.search(r'\.\/.*\/',path).group()
-      pathlib.Path(directory).mkdir(parents=True, exist_ok=True)
+      directory=re.search(r'\/.*\/',path).group()
+      Path(directory).mkdir(parents=True, exist_ok=True)
       with open(path, 'wb') as f:
           pickle.dump(data, f)
 
@@ -106,36 +137,89 @@ class MagD:
           raise
 
 
-    def get_pickle_noise_path(self,dir,sta,chan,net,loc,start,end):
-      return "./{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(self.pickle_dir,
+    def get_pickled_noise_path(self,dir,sta,chan,net,loc,start,end):
+      return "{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(self.pickle_dir,
                   dir,sta,chan,net,loc,start,end)
 
     '''
       create a path name to pickle mag grid must be of same length
       for comparison so resolution added
     '''
-    def get_pickle_grid_path(self,dir,name,resolution):
-      return "./{}/{}/{}-res-{}.pickle".format(self.pickle_dir,
+    def get_pickled_vector_path(self,dir,name,resolution):
+      return "{}/{}/{}-res-{}.pickle".format(self.pickle_dir,
                   dir,name,resolution)
 
+    def print_noise_not_found(self,sta,chan,loc,net,startime,endtime,code):
+        print("{}:{}:{}:{} startime: {}, endtime {} returned HTTP code {}".format(
+            sta,chan,loc,net,startime,endtime,code))
+
+
+    #create and pickle all vectors
+    def create_vectors(self):
+        self.read_stations()
+        self.get_noise()
+        self.profile_noise()
+        #since we ran through whole thing just save both matrices
+        detection_vector=self.build_detection_vector()
+        self.pickle_vector('detection_vector', detection_vector)
+        distance_vector, gap_vector=self.build_distance_and_gap_vector()
+        self.pickle_vector('distance_vector',distance_vector)
+        self.pickle_vector('gap_vector',gap_vector)
+        return self.print_summary(detection_vector, distance_vector,gap_vector)
+
+
+    #read vectors from pickle file
+    def read_vectors(self):
+        self.read_stations()
+        other_vector_path=None
+        dir=self.type +'_vector'
+        try:
+            this_vector_path=self.get_pickled_vector_path(dir,
+                        self.name, self.grid_resolution)
+            this_vector_file= Path(this_vector_path)
+            if self.diff_with:
+                other_vector_path=self.get_pickled_vector_path(dir,
+                            self.diff_with, self.grid_resolution)
+                other_vector_file= Path(other_vector_path)
+
+        except FileNotFoundError:
+            print("Pickle file not found!")
+            print("Expected: {}".format(other_vector_path))
+            exit(1)
+        self.vector1= self.get_pickle(this_vector_path)
+        if self.diff_with:
+            self.vector2= self.get_pickle(other_vector_path)
+
+
+
+    #find all noise keys in config file
+    def noise_keys(self):
+        return [n for n in self.conf.sections()  if re.match(r'noise',n)]
     #Create Scnl collections, and assign power
 
-    def get_noise(self):
-        data_keys=MagD.conf.sections()
-        data_keys.remove('main')
 
-        for key in data_keys:
-            conf=MagD.conf[key]
+    #read all station in from csv and add them to collection (init)
+    def read_stations(self):
+        for key in self.noise_keys():
+            conf=self.conf[key]
             path=conf['csv_path']
-            df_stas = pd.read_csv(path)
+            df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
             #instantiate Scnl from each station
             for i, row in df_stas.iterrows():
                 #loc is reserved, used location for column name
                 #blank locs are eval as NaN
-                if not isinstance(row.location, str) and math.isnan(float(row.location)):
+                # print(row.sta)
+                # print(type(row.location))
+                if len(row.location) ==0:
+                    #if not isinstance(row.location, str) and math.isnan(float(row.location)):
                     row.location="--"
                 Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
                     row.lon, row.depth, key)
+
+    def get_noise(self):
+        # print noise_keys
+        for key in self.noise_keys():
+            conf=self.conf[key]
             for scnl in self.scnl_collections()[key]:
                 starttime=conf['starttime']
                 endtime=conf['endtime']
@@ -152,7 +236,7 @@ class MagD:
                 #try to load noise from pickle file,
                 #if not there go to iris
                 try:
-                    pickle_path= self.get_pickle_noise_path("noise",sta,chan,net,loc,
+                    pickle_path= self.get_pickled_noise_path("noise",sta,chan,net,loc,
                                 starttime,endtime)
                     data=self.get_pickle(pickle_path)
                     scnl.set_powers(data)
@@ -162,21 +246,21 @@ class MagD:
                         self.set_pickle(pickle_path, resp['data'])
                         scnl.set_powers(resp['data'])
                     else: #remove from collections
-                        if self.output:
+                        if self.verbose_output:
                             self.print_noise_not_found(sta,chan,loc,net,starttime,endtime,resp['code'])
                         scnl.powers=None
             #remove scnls with no power
             pre_len=len(self.scnl_collections()[key])
             self.scnl_collections()[key] =[s for s in self.scnl_collections()[key] if s.powers !=None]
             post_len=len(self.scnl_collections()[key])
-            if pre_len !=post_len and self.output:
+            if pre_len !=post_len and self.verbose_output:
                 print("{} channel(s) found without noise pdf".format(pre_len-post_len))
 
 
 
-    def find_detections(self):
+    def profile_noise(self):
         for lat in self.lat_list():
-            if self.output:
+            if self.verbose_output:
                 print(lat)
             for lon in self.lon_list():
                 origin = Origin(lat,lon)
@@ -244,33 +328,41 @@ class MagD:
     '''
         Summary output
     '''
-    def print_summary(self):
+    def print_summary(self,detection_vector,distance_vector,
+                        gap_vector,station_summary=False):
         summary=[]
-        calcs=len(self.origin_collection())
-        summary.append("Min: %.2f"%min(self.summary_mag_list))
-        summary.append("Max: %.2f"%max(self.summary_mag_list))
-        summary.append("Ave: %.2f"%np.average(self.summary_mag_list))
-        summary.append("Med: %.2f"%np.median(self.summary_mag_list))
-        summary.append("\nSolution Summary for %i calculations:"%calcs)
-        summary.append("Sta   Chan Hits    Productivity")
-
-
-        for key in self.scnl_collections():
-            #print("Data set {}".format(key))
-            for scnl in self.scnl_collections()[key]:
-                #do some formating
-                if scnl.solutions==0:
-                    percent="N/A"
-                else:
-                    c=(scnl.solutions/calcs)*100
-                    percent="%.2f%%"%c
-                sta=scnl.sta
-                while len(sta) < 4:
-                    sta=sta + " "
-                sols=str(scnl.solutions)
-                while len(sols) < 6:
-                    sols=" " + sols
-                summary.append("{}  {}  {}  {}".format(sta, scnl.chan, sols, percent))
+        if gap_vector:
+            summary.append("Gap Min: %.2f"%min(gap_vector))
+            summary.append("Gap Max: %.2f"%max(gap_vector))
+            summary.append("Gap Ave: %.2f"%np.average(gap_vector))
+        if distance_vector:
+            summary.append("Dist Min: %.2f"%min(distance_vector))
+            summary.append("Dist Max: %.2f"%max(distance_vector))
+            summary.append("Dist Ave: %.2f"%np.average(distance_vector))
+        if detection_vector:
+            calcs=len(self.origin_collection())
+            summary.append("Mag Min: %.2f"%min(self.summary_mag_list))
+            summary.append("Mag Max: %.2f"%max(self.summary_mag_list))
+            summary.append("Mag Ave: %.2f"%np.average(self.summary_mag_list))
+        if station_summary:
+            summary.append("\nSolution Summary for %i calculations:"%calcs)
+            summary.append("Sta   Chan Hits    Productivity")
+            for key in self.scnl_collections():
+                #print("Data set {}".format(key))
+                for scnl in self.scnl_collections()[key]:
+                    #do some formating
+                    if scnl.solutions==0:
+                        percent="N/A"
+                    else:
+                        c=(scnl.solutions/calcs)*100
+                        percent="%.2f%%"%c
+                    sta=scnl.sta
+                    while len(sta) < 4:
+                        sta=sta + " "
+                    sols=str(scnl.solutions)
+                    while len(sols) < 6:
+                        sols=" " + sols
+                    summary.append("{}  {}  {}  {}".format(sta, scnl.chan, sols, percent))
         return "\n".join(summary)
 
     '''for set return lat,lon, and solutions
