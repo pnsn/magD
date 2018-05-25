@@ -13,6 +13,7 @@ from .origin import Origin
 from .scnl import Scnl
 from .seis import *
 from .iris import get_noise_pdf
+from .map_grid import MapGrid
 
 
 class MagD:
@@ -38,16 +39,17 @@ class MagD:
         self.mu =c.getfloat('mu') #3e11
         self.qconst = c.getfloat('qconst') #300.0
         self.beta = c.getfloat('beta') #3.5  # km/s
-        self.pickle_dir=c.get('pickle_dir')
+        self.pickle_path=c.get('pickle_path')
         #types: detection, az_gap
         #stats on run
         self.summary_mag_list=[]
         self.verbose_output= c.getboolean('verbose_output')
-        #diff with existing vector?
-        self.diff_with=c.get('diff_with',None)
         self.type=type
-        self.vector1=None
-        self.vector2=None
+        #compare with other grid
+        self.compare_name=c.get('compare_name',None)
+        self.compare_type=c.get('compare_type',None)
+        self.grid=None
+        self.other_grid=None
 
 
 
@@ -99,31 +101,19 @@ class MagD:
 
 
 
-    # #combine both gap and distance
-    # def make_gap_distance_vector(self, vector):
-    #     #from Paul Bodin
-    #     #0.5*[(gap - gap/n)/360] + log(d)/3]
-    #     scored_vector=[]
-    #     for tup in vector:
-    #         gap=tup[0]
-    #         distance=tup[1]
-    #         gap=(gap-gap/self.num_detections)/360
-    #         print(distance)
-    #         score=0.5*(gap + math.log(distance)/3)
-    #         print(math.log(distance))
-    #         scored_vector.append(score)
-    #     return scored_vector
 
 
     '''save detection_vector to compare/diff with another. Uses name from config file'''
-    def pickle_vector(self,dir,vector):
-        pickle_path=self.get_pickled_vector_path(dir,self.name,self.grid_resolution)
-        self.set_pickle(pickle_path, vector)
+    def pickle_map_grid(self, map_grid):
+        pickle_path=self.get_pickled_grid_path(self.pickle_path, map_grid.type,
+                    map_grid.name, map_grid.numrows, map_grid.numcols,
+                    map_grid.resolution)
+        self.set_pickle(pickle_path, map_grid)
 
 
 
-    def set_pickle(self,path, data):
-      #create pickle_dirs if they don't exist
+    def set_pickle(self, path, data):
+      #create pickle_paths if it doesn't exist
       directory=re.search(r'\/.*\/',path).group()
       Path(directory).mkdir(parents=True, exist_ok=True)
       with open(path, 'wb') as f:
@@ -138,57 +128,79 @@ class MagD:
 
 
     def get_pickled_noise_path(self,dir,sta,chan,net,loc,start,end):
-      return "{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(self.pickle_dir,
+      return "{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(self.pickle_path,
                   dir,sta,chan,net,loc,start,end)
 
     '''
       create a path name to pickle mag grid must be of same length
       for comparison so resolution added
     '''
-    def get_pickled_vector_path(self,dir,name,resolution):
-      return "{}/{}/{}-res-{}.pickle".format(self.pickle_dir,
-                  dir,name,resolution)
+
+    "create unique path based on name, type and resolution"
+    def get_pickled_grid_path(self,pickle_path, type, name, numrows,
+                            numcols, resolution):
+      return "{}/{}_grid/{}-{}x{}-res-{}.pickle".format(pickle_path,
+            type ,name, numrows, numcols, resolution)
+
 
     def print_noise_not_found(self,sta,chan,loc,net,startime,endtime,code):
         print("{}:{}:{}:{} startime: {}, endtime {} returned HTTP code {}".format(
             sta,chan,loc,net,startime,endtime,code))
 
 
-    #create and pickle all vectors
-    def create_vectors(self):
+    #create and pickle all map_grids
+    def create_grids(self):
         self.read_stations()
         self.get_noise()
         self.profile_noise()
+        numrows=len(self.lat_list())
+        numcols=len(self.lon_list())
         #since we ran through whole thing just save both matrices
+
         detection_vector=self.build_detection_vector()
-        self.pickle_vector('detection_vector', detection_vector)
+        detection_grid=MapGrid(self.name, "detection", numrows, numcols,
+                                self.grid_resolution)
+        detection_grid.make_matrix(detection_vector)
+        self.pickle_map_grid(detection_grid)
+
         distance_vector, gap_vector=self.build_distance_and_gap_vector()
-        self.pickle_vector('distance_vector',distance_vector)
-        self.pickle_vector('gap_vector',gap_vector)
+        distance_grid=MapGrid(self.name, 'distance', numrows, numcols,
+                             self.grid_resolution)
+        distance_grid.make_matrix(distance_vector)
+        self.pickle_map_grid(distance_grid)
+
+        gap_grid=MapGrid(self.name, 'gap', numrows, numcols,
+                            self.grid_resolution)
+        gap_grid.make_matrix(gap_vector)
+        self.pickle_map_grid(gap_grid)
+
         return self.print_summary(detection_vector, distance_vector,gap_vector)
 
 
     #read vectors from pickle file
-    def read_vectors(self):
+    def read_grids(self):
         self.read_stations()
-        other_vector_path=None
-        dir=self.type +'_vector'
+        other_grid_path=None
         try:
-            this_vector_path=self.get_pickled_vector_path(dir,
-                        self.name, self.grid_resolution)
-            this_vector_file= Path(this_vector_path)
-            if self.diff_with:
-                other_vector_path=self.get_pickled_vector_path(dir,
-                            self.diff_with, self.grid_resolution)
-                other_vector_file= Path(other_vector_path)
+            this_grid_path=self.get_pickled_grid_path(self.pickle_path, self.type,
+                            self.name, len(self.lat_list()), len(self.lon_list()),
+                            self.grid_resolution)
+
+            this_grid_file= Path(this_grid_path)
+            if self.compare_name and self.compare_type:
+                other_grid_path=self.get_pickled_grid_path(self.pickle_path,
+                                self.compare_type, self.compare_name, self.name,
+                                len(self.lat_list()), len(self.lon_list()),
+                                self.grid_resolution)
+                other_grid_file= Path(other_grid_path)
 
         except FileNotFoundError:
             print("Pickle file not found!")
-            print("Expected: {}".format(other_vector_path))
+            print("Expected: {}".format(other_grid_path))
             exit(1)
-        self.vector1= self.get_pickle(this_vector_path)
-        if self.diff_with:
-            self.vector2= self.get_pickle(other_vector_path)
+        self.grid= self.get_pickle(this_grid_path)
+        if other_grid_path:
+            self.other_grid= self.get_pickle(other_grid_path)
 
 
 
@@ -206,10 +218,6 @@ class MagD:
             df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
             #instantiate Scnl from each station
             for i, row in df_stas.iterrows():
-                #loc is reserved, used location for column name
-                #blank locs are eval as NaN
-                # print(row.sta)
-                # print(type(row.location))
                 if len(row.location) ==0:
                     #if not isinstance(row.location, str) and math.isnan(float(row.location)):
                     row.location="--"

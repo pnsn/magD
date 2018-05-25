@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
 import datetime
+import math
 
 
 from .magD import MagD
@@ -53,17 +54,36 @@ class PlotMagD():
 
     '''
         For turn vector(list) into matrix of len(lats) x len(lons)
-        if two vectors exist diff 
+        if two vectors exist diff
     '''
-    def make_matrix(self,len_lat,len_lon):
-        other_vector=None
-        md=self.magD
-        vector=md.vector1
-        other_vector=md.vector2
-        if other_vector:
-            vector=[a - b  for a, b in zip(vector, other_vector)]
-        z=np.asarray(vector);
-        return np.reshape(z, (len_lat,len_lon))
+
+    def process_grid(self):
+        this_grid=self.evaluate_grid(self.magD.grid)
+        if self.magD.other_grid:
+            other_grid=self.evaluate_grid(self.magD.other_grid)
+            new_grid=[]
+            for i in other_grid.matrix:
+                row =[a - b  for a, b in zip(this_grid[i], other_grid[i])]
+                new_grid.append(row)
+            return new_grid
+        else:
+            return this_grid
+
+
+    def evaluate_grid(self,grid):
+        new_grid=[]
+        max=np.max(grid.matrix)
+        if grid.type=="distance":
+            for row in grid.matrix:
+                r=[math.log(distance)/math.log(max) for distance in row]
+                new_grid.append(r)
+        elif grid.type=="gap":
+            for row in grid.matrix:
+                r=[gap/max for gap in row]
+                new_grid.append(r)
+        else:
+            new_grid=grid.matrix
+        return new_grid
 
 
     '''
