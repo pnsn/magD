@@ -1,8 +1,13 @@
 
-# usage:
-#to install basemap on osx
-#brew install geos
-#pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
+''''
+usage:
+PlotMagD is a matplotlib wrapper specific to MapGrid plotting
+It is not required to plot MapGrids
+to install basemap on osx
+brew install geos
+pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
+
+''''
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np
@@ -66,9 +71,3 @@ class PlotMagD():
     def outfile_with_stamp(self,path):
         return "{}{}-{}-{}.png".format(path, self.mapGrid.name,
             datetime.datetime.now().strftime("%Y%m%d%H%M%S"),self.mapGrid.type)
-
-
-    #FIXME we don't need this
-    # #for key what is plot color in config
-    # def plot_color_label(self, color:
-    #     return MagD.conf[key]['color'], MagD.conf[key]['label']

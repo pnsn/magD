@@ -23,15 +23,11 @@ class MagD:
         {
             'data1':{
                 'csv_path': some/path (string),
-                'color': plot color (string),
-                'label': legend label (string),
                 'starttime': YYYY-mm-dd (string),
                 'endtime': YYYY-mm-dd (string),
             },
             'data2':{
                 'csv_path': some/path (string),
-                'color': plot color (string),
-                'label': legend label (string),
                 'starttime': YYYY-mm-dd (string),
                 'endtime': YYYY-mm-dd (string),
                 #optional keys for templating
@@ -114,7 +110,7 @@ class MagD:
         # return self.print_summary()
 
 
-    
+
 
 
 

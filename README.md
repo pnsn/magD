@@ -3,8 +3,20 @@
 A routine for looking at magnitude detection thresholds using noise pdfs and
 the Brune model, written by Dan McNamara in C and ported to python
 
+##Client
+
+This library is ran by the client at https://github.com/pnsn/magd_client refer to this repo for details
+
+
 ## Use
 To use in dev mode
 pip install -e .
 
-## HTTP client is half baked at htts://github.com/pnsn/magD_http
+## Output
+
+The MagD routine outputs objects of class MapGrid, which are saved by pickling.
+
+The MapGrid object is then used to plot using plotMagD.py, see client, above, for details
+
+# MapGrid object
+Class details comming soon, see class if you just can't wait!
