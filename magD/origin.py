@@ -59,24 +59,24 @@ class Origin:
                   scnl.solutions+=1
               i+=1
 
-  #FIXME? This is not being used anymore
-  @classmethod
-  def build_map_grid(cls,lats,lons,num_stas,with_stas=False):
-    grid={}
-    grid['lat_start']=lats[0]
-    grid['lon_start']=lons[0]
-    grid['lat_step']=lats[1]-lats[0]
-    grid['lon_step']=lons[1]-lons[0]
-    min_mags=[o.min_detection(num_stas) for o in  cls.collection]
-    grid['max']= round(max(min_mags),2)
-    grid['min'] = round(min(min_mags),2)
-    grid["grid"]=np.reshape(min_mags, (len(lats), len(lons))).tolist()
-    # if with_stas:
-      # stas=[o.slice_detections(num_stas) for o in  cls.collection]
-
-
-      # grid['stations']=np.reshape(stas, (len(lats), len(lons))).tolist()
-    return grid
+  # #FIXME? This is not being used anymore
+  # @classmethod
+  # def build_map_grid(cls,lats,lons,num_stas,with_stas=False):
+  #   grid={}
+  #   grid['lat_start']=lats[0]
+  #   grid['lon_start']=lons[0]
+  #   grid['lat_step']=lats[1]-lats[0]
+  #   grid['lon_step']=lons[1]-lons[0]
+  #   min_mags=[o.min_detection(num_stas) for o in  cls.collection]
+  #   grid['max']= round(max(min_mags),2)
+  #   grid['min'] = round(min(min_mags),2)
+  #   grid["grid"]=np.reshape(min_mags, (len(lats), len(lons))).tolist()
+  #   # if with_stas:
+  #     # stas=[o.slice_detections(num_stas) for o in  cls.collection]
+  #
+  #
+  #     # grid['stations']=np.reshape(stas, (len(lats), len(lons))).tolist()
+  #   return grid
 
   @classmethod
   def build_xyz_lists(cls, num_stas):

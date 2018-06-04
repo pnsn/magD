@@ -10,24 +10,19 @@ import datetime
 import math
 
 
-from .magD import MagD
+# from .mapGrid import MapGrid
 
 class PlotMagD():
-    def __init__(self, magD, type):
-        self.magD=magD
-        c=magD.conf['plot']
-        self.mag_min=float(c.get('mag_min'))
-        self.mag_max=float(c.get('mag_max'))
-        self.title=c.get('title')
-        self.type=type
+    def __init__(self, mapGrid):
+        self.mapGrid = mapGrid
     #return plot object
     def plot(self):
         return plt
 
     #returns center of map based on config min/max
     def map_center(self):
-        lat=0.5*(self.magD.lat_max-self.magD.lat_min) + self.magD.lat_min
-        lon=0.5*(self.magD.lon_max-self.magD.lon_min) + self.magD.lon_min
+        lat=0.5*(self.mapGrid.lat_max-self.mapGrid.lat_min) + self.mapGrid.lat_min
+        lon=0.5*(self.mapGrid.lon_max-self.mapGrid.lon_min) + self.mapGrid.lon_min
         return lat,lon
 
 
@@ -52,38 +47,6 @@ class PlotMagD():
         levels=[x / 10.0 for x in range(mag_min, mag_max, step)]
         return levels
 
-    '''
-        For turn vector(list) into matrix of len(lats) x len(lons)
-        if two vectors exist diff
-    '''
-
-    def process_grid(self):
-        this_grid=self.evaluate_grid(self.magD.grid)
-        if self.magD.other_grid:
-            other_grid=self.evaluate_grid(self.magD.other_grid)
-            new_grid=[]
-            for i in other_grid.matrix:
-                row =[a - b  for a, b in zip(this_grid[i], other_grid[i])]
-                new_grid.append(row)
-            return new_grid
-        else:
-            return this_grid
-
-
-    def evaluate_grid(self,grid):
-        new_grid=[]
-        max=np.max(grid.matrix)
-        if grid.type=="distance":
-            for row in grid.matrix:
-                r=[math.log(distance)/math.log(max) for distance in row]
-                new_grid.append(r)
-        elif grid.type=="gap":
-            for row in grid.matrix:
-                r=[gap/max for gap in row]
-                new_grid.append(r)
-        else:
-            new_grid=grid.matrix
-        return new_grid
 
 
     '''
@@ -91,7 +54,7 @@ class PlotMagD():
         returns x,y projected coords
     '''
     def project_x_y(self,map):
-        return map(*np.meshgrid(self.magD.lon_list(),self.magD.lat_list()))
+        return map(*np.meshgrid(self.mapGrid.lon_list(),self.mapGrid.lat_list()))
 
     def meridian_interval(self,lon_min,lon_max):
         return np.linspace(lon_min,lon_max,4,dtype = int)
@@ -100,10 +63,12 @@ class PlotMagD():
         return np.linspace(lat_min,lat_max,4,dtype = int)
 
     #make outfile unique to avoid clobbering
-    def outfile_with_stamp(self,name):
-        return "{}-{}-{}.png".format(name,
-            datetime.datetime.now().strftime("%Y%m%d%H%M%S"),self.type)
+    def outfile_with_stamp(self,path):
+        return "{}{}-{}-{}.png".format(path, self.mapGrid.name,
+            datetime.datetime.now().strftime("%Y%m%d%H%M%S"),self.mapGrid.type)
 
-    #for key what is plot color in config
-    def plot_color_label(self,key):
-        return MagD.conf[key]['color'], MagD.conf[key]['label']
+
+    #FIXME we don't need this
+    # #for key what is plot color in config
+    # def plot_color_label(self, color:
+    #     return MagD.conf[key]['color'], MagD.conf[key]['label']

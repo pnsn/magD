@@ -137,10 +137,11 @@ def min_detect(scnl, db, Mw, freq):
         largest=0
         n - n-1, n-1 - n-2... n - 1 +360
         if < 0; deg + 360
-        return shortest distance and largest az
+        return asc sorted list of distances and largest az
 '''
 def dist_and_azimuthal_gap(scnls,source):
     gaps=[]
+    distances = []
     #larger than earth's circumference
     #do not use on Jupiter!
     min_dist=50000.0
@@ -148,8 +149,7 @@ def dist_and_azimuthal_gap(scnls,source):
     for s in scnls:
         dist,gap,bgap= distaz(s.lat,s.lon,source.lat,source.lon)
         dist/=1000
-        if dist < min_dist:
-            min_dist=dist
+        distances.append(dist)
         gaps.append(gap)
     gaps.sort(reverse=True)
     #prepend last az + 360 to list
@@ -158,4 +158,4 @@ def dist_and_azimuthal_gap(scnls,source):
         gap=gaps[i]-gaps[i+1]
         if gap > max_gap:
             max_gap=gap
-    return min_dist,max_gap
+    return distances, max_gap
