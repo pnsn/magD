@@ -18,7 +18,7 @@ class TestMagD(unittest.TestCase):
         self.assertEqual(magd.lon_min, -130.0)
         self.assertEqual(magd.lon_max, -120.0 + magd.grid_resolution)
         self.assertEqual(magd.grid_resolution, 1.0)
-        self.assertEqual(magd.num_detections, 2)
+        self.assertEqual(magd.num_solutions, 2)
         self.assertEqual(magd.nyquist_correction, 0.4)
         self.assertEqual(magd.mu, 3e11)
         self.assertEqual(magd.qconst, 300.0)

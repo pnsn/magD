@@ -22,9 +22,9 @@ signal_adjusted_values = {
 
 
 
-# Calculates the distance between two locations with a lat/lon
+# Calculates the distance between two objects with a lat/lon attrs
 #return both angular distance(rad) and distance in km
-def distance(origin, destination):
+def find_distance(origin, destination):
     lat1, lon1 = origin.lat, origin.lon
     lat2, lon2 = destination.lat, destination.lon
     radius = 6371  # km
@@ -137,9 +137,9 @@ def min_detect(scnl, db, Mw, freq):
         largest=0
         n - n-1, n-1 - n-2... n - 1 +360
         if < 0; deg + 360
-        return asc sorted list of distances and largest az
+        return asc sorted list of distan largest az
 '''
-def dist_and_azimuthal_gap(scnls,source):
+def azimuthal_gap(scnls,source):
     gaps=[]
     distances = []
     #larger than earth's circumference
@@ -148,8 +148,8 @@ def dist_and_azimuthal_gap(scnls,source):
     max_gap=0.0
     for s in scnls:
         dist,gap,bgap= distaz(s.lat,s.lon,source.lat,source.lon)
-        dist/=1000
-        distances.append(dist)
+        # dist/=1000
+        # distances.append(dist)
         gaps.append(gap)
     gaps.sort(reverse=True)
     #prepend last az + 360 to list
@@ -158,4 +158,4 @@ def dist_and_azimuthal_gap(scnls,source):
         gap=gaps[i]-gaps[i+1]
         if gap > max_gap:
             max_gap=gap
-    return distances, max_gap
+    return max_gap

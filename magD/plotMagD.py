@@ -1,5 +1,5 @@
 
-''''
+'''
 usage:
 PlotMagD is a matplotlib wrapper specific to MapGrid plotting
 It is not required to plot MapGrids
@@ -7,7 +7,7 @@ to install basemap on osx
 brew install geos
 pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz
 
-''''
+'''
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import numpy as np

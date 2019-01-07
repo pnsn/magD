@@ -34,16 +34,16 @@ class TestOrigin(unittest.TestCase):
 
 
     o.insertDetection((3,scnl0))
-    self.assertEqual(len(o.detections),1)
+    self.assertEqual(len(o.solutions),1)
     '''should move to front'''
     o.insertDetection((2,scnl1))
-    self.assertEqual(len(o.detections),2)
-    self.assertEqual(o.detections[0][1], scnl1)
+    self.assertEqual(len(o.solutions),2)
+    self.assertEqual(o.solutions[0][1], scnl1)
     '''should insert at end'''
     o.insertDetection((5,scnl3))
-    print(o.detections)
-    self.assertEqual(len(o.detections),3)
-    self.assertEqual(o.detections[2][1], scnl3)
+    print(o.solutions)
+    self.assertEqual(len(o.solutions),3)
+    self.assertEqual(o.solutions[2][1], scnl3)
 
   '''test num_stas indexing'''
 

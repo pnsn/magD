@@ -22,10 +22,10 @@ def get_pickle(path):
 #common paths
 "create unique path based on name, type and resolution"
 def get_grid_path(root_path, type, name, numrows, numcols, resolution):
-  return "{}/{}_grid/{}-{}x{}-res-{}.pickle".format(root_path,
+  return "{}/{}/{}_grid/{}-{}x{}-res-{}.pickle".format(root_path, name,
         type ,name, numrows, numcols, resolution)
 
 
 def get_noise_path(root_path,dir,sta,chan,net,loc,start,end):
   return "{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(root_path,
-              dir,sta,chan,net,loc,start,end)
+              dir, sta, chan, net, loc, start, end)

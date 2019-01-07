@@ -1,3 +1,40 @@
+'''
+Class to manage running a single magD process, which can have many outputs.
+The class excepts a list of instatiated MapGrid objects:
+    If detection map is needed, detection MUST be the first grid object, so that
+    all other grids use results from detection analysis.
+    [MagGrid,...,MapGrid]
+
+And a dictionary for data source:
+
+    {
+        'data1':{
+            'csv_path': some/path (string),
+            'starttime': YYYY-mm-dd (string),
+            'endtime': YYYY-mm-dd (string),
+        },
+        'data2':{
+            'csv_path': some/path (string),
+            'starttime': YYYY-mm-dd (string),
+            'endtime': YYYY-mm-dd (string),
+            #optional keys for templating
+            'template_sta': template_station (string),
+            'template_chan': template_channel (string),
+            'template_net': template_network (string),
+            'template_loc': template_loc (string)
+
+        }
+    }
+    An list to output summary is also instatiated on init.
+
+    For noise, A PDF is first looked for in the pickle_directory, configurable
+    on the client github.com/pnsn/magd_client. If not found, process will retrieve
+    from IRIS and then pickle.
+
+    MagD outputs grid(s) MapGrid and pickles for
+'''
+
+
 import math
 import pandas as pd
 import numpy as np
@@ -11,33 +48,12 @@ from .scnl import Scnl
 from .seis import *
 from .iris import get_noise_pdf
 from .pickle import *
+from .solution import Solution
 
 
 class MagD:
     '''
-        init with an array of mapGrid objects
-        builds and saves mapGrid for later use
-        grids = list of MapGrid objects
-        data_srs = dict of form
-
-        {
-            'data1':{
-                'csv_path': some/path (string),
-                'starttime': YYYY-mm-dd (string),
-                'endtime': YYYY-mm-dd (string),
-            },
-            'data2':{
-                'csv_path': some/path (string),
-                'starttime': YYYY-mm-dd (string),
-                'endtime': YYYY-mm-dd (string),
-                #optional keys for templating
-                'template_sta': template_station (string),
-                'template_chan': template_channel (string),
-                'template_net': template_network (string),
-                'template_loc': template_loc (string)
-
-            }
-        }
+        intatiate a run:
     '''
     def __init__(self, grids, data_srcs):
         self.grids=grids
@@ -54,29 +70,40 @@ class MagD:
 
     '''return 1dim list of mag levels used for heat map'''
     def build_detection_vector(self):
-        d = [o.min_detection(self.grids[0].num_detections)
+        d = [o.min_detection(self.grids[0].num_solutions)
                 for o in  self.origin_collection()]
         return np.array(d)
 
-    '''
-        considers only stations that are part of the num_detections
+    ''' Add all distances to a list and sort
+        considers only stations that are part of the num_solutions
         solution
         returns max_gap np array and distance matrix (2dim np array)
         with the distances of all stations to the origin to allow for
         min/med/ave/max distance matrices
     '''
-    def build_distance_and_gap_vectors(self):
+
+    def build_distance_vector(self):
         grid=self.grids[0]
         distances = []
-        gaps = []
-        scnls = []
         for o in self.origin_collection():
-            #take 2nd element of detection tuple
-            scnls=[d[1] for d in o.detections[0:grid.num_detections]]
-            dists,gap=dist_and_azimuthal_gap(scnls,o)
+            dists = []
+            for solution in o.solutions[0:grid.num_solutions]:
+                if solution.distance == None:
+                    rad, d=find_distance(o, solution)
+                    solution.distance=d/1000
+                dists.append(solution.distance)
+            dists.sort()
             distances.append(dists)
+        return np.array(distances)
+
+    def build_gap_vector(self):
+        grid=self.grids[0]
+        gaps = []
+        for o in self.origin_collection():
+            scnls=[d.scnl for d in o.solutions[0:grid.num_solutions]]
+            gap=azimuthal_gap(scnls,o)
             gaps.append(gap)
-        return np.array(distances), np.array(gaps)
+        return np.array(gaps)
 
 
     #message for noise pdf not found
@@ -88,13 +115,29 @@ class MagD:
     #create and pickle all map_grids
     def build_grids(self):
         self.read_stations()
-        self.get_noise()
-        self.profile_noise()
-        distance_matrix, gap_vector=self.build_distance_and_gap_vectors()
-        detection_vector=self.build_detection_vector()
+        self.make_origins()
+        detection_vector = None
+        for grid in self.grids:
+            if grid.type == 'detection':
+                self.get_noise()
+                self.profile_noise()
+                detection_vector=self.build_detection_vector()
+                break
+
+        # evaluate spatially
+        if detection_vector is None:
+            self.profile_spatially()
+        #distance and gap grids can't be built until it is determined whether
+        #stations are prioritized by detection or just spatially
+        for grid in self.grids:
+            if re.match("^dist", grid.type) is not None:
+                distance_matrix=self.build_distance_vector()
+                break
+
+
         for grid in self.grids:
             if grid.type=='gap':
-                grid.make_matrix(gap_vector)
+                grid.make_matrix(self.build_gap_vector())
             elif grid.type=='dist_min':
                 grid.make_matrix([np.min(row) for row in distance_matrix])
             elif grid.type=='dist_med':
@@ -102,7 +145,7 @@ class MagD:
             elif grid.type=='dist_ave':
                 grid.make_matrix([np.average(row) for row in distance_matrix])
             elif grid.type=='dist_max':
-                grid.make_matrix([np.average(row) for row in distance_matrix])
+                grid.make_matrix([np.max(row) for row in distance_matrix])
             elif grid.type=='detection':
                 grid.make_matrix(detection_vector)
             grid.scnls=self.scnl_collections()
@@ -124,9 +167,16 @@ class MagD:
                 if len(row.location) ==0:
                     #if not isinstance(row.location, str) and math.isnan(float(row.location)):
                     row.location="--"
+                if not hasattr(row, 'depth'):
+                    row.depth = 0
                 Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
                     row.lon, row.depth, key)
 
+    '''
+        retrieve and pickle all pdfs
+        if pickled pdf exists use it instead of
+        querying iris
+    '''
     def get_noise(self):
         # print noise_keys
         for key in self.data_srcs:
@@ -168,73 +218,104 @@ class MagD:
                 print("{} channel(s) found without noise pdf".format(pre_len-post_len))
 
 
+    '''
+        Walk the grid and for each point on map, find smallest detectable earthquake
+        for each station. Sort stations low mag to high mag at end. Then use
+        index of array as num solutions. For example if num_solutions =5 then
+        use index 4 for the lowest mag detectable at this point.
+    '''
 
-    def profile_noise(self):
+    def make_origins(self):
+        Origin.clear_collection()
+        #find first, all have same attrs
         grid=self.grids[0]
         for lat in grid.lat_list():
-            if lat %1 ==0.0:
-                print("{}, ".format(lat), end="")
             for lon in grid.lon_list():
-                origin = Origin(lat,lon)
-                mindetect = []
-                # for every scnl
-                for key in self.scnl_collections():
-                    for scnl in self.scnl_collections()[key]:
-                        if scnl.powers==None:
-                            continue
-                        if len(scnl.powers)>0:
-                            start_period = 0.001
-                            end_period = 280
+                Origin(lat,lon)
 
-                            #Goes through all the freqs, i.e. from small to large Mw
-                            #this way the first detection will be the min Mw
-                            period = start_period
-                            # origin = (source.lat, source.lon)
-                            # destination = (scnl.lat, scnl.lon)
-                            # Calculate distance between earthquake and station
-                            delta_rad, delta_km = distance(origin, scnl)  # km
-                            #case where delta is 0.0, oh it's happend
-                            # if delta_rad==0.0 or delta_km==0.0:
-                            #     continue
-                            #for each period
-                            while period <= end_period:
-                                fc = 1/period
-                                fault_rad = fault_radius(fc, grid.beta)
-                                Mo = moment(fault_rad)
-                                Mw = round(moment_magnitude(Mo),2)
-                                filtfc=signal_adjusted_frequency(Mw,fc)
-                                nyquist=scnl.samprate*grid.nyquist_correction
+    def profile_noise(self):
+        print('Profiling by noise...')
+        grid=self.grids[0]
+        lat = None
+        for origin in self.origin_collection():
+            if lat != origin.lat or lat is None:
+                lat = origin.lat
+                print(lat)
+            mindetect = []
+            # for every scnl
+            for key in self.scnl_collections():
+                for scnl in self.scnl_collections()[key]:
+                    if scnl.powers==None:
+                        continue
+                    if len(scnl.powers)>0:
+                        start_period = 0.001
+                        end_period = 280
 
-                                if filtfc >= nyquist:
-                                  filtfc=nyquist
+                        #Goes through all the freqs, i.e. from small to large Mw
+                        #this way the first detection will be the min Mw
+                        period = start_period
+                        # Calculate distance between earthquake and station
+                        delta_rad, delta_km = find_distance(origin, scnl)  # km
+                        #for each period
+                        while period <= end_period:
+                            fc = 1/period
+                            fault_rad = fault_radius(fc, grid.beta)
+                            Mo = moment(fault_rad)
+                            Mw = round(moment_magnitude(Mo),2)
+                            filtfc=signal_adjusted_frequency(Mw,fc)
+                            nyquist=scnl.samprate*grid.nyquist_correction
 
-                                As = amplitude(fc, Mo, grid.cn(), delta_km, filtfc)
-                                As*=geometric_spreading(delta_km)
-                                q = grid.qconst*math.pow(nyquist, 0.35)  # Q value
-                                As*=attenuation(delta_km, q, grid.beta, filtfc)
+                            if filtfc >= nyquist:
+                              filtfc=nyquist
 
-                                # Pwave amp is 10 times smaller than S
-                                # correction for matching brune scaling to PSD
-                                #calculation normalization
-                                As/=6.0
-                                db = amplitude_power_conversion(As)
+                            As = amplitude(fc, Mo, grid.cn(), delta_km, filtfc)
+                            As*=geometric_spreading(delta_km)
+                            q = grid.qconst*math.pow(nyquist, 0.35)  # Q value
+                            As*=attenuation(delta_km, q, grid.beta, filtfc)
 
-                                detection = min_detect(scnl,db, Mw, filtfc)
-                                if(detection):
-                                    origin.insertDetection((Mw,scnl))
-                                    break
+                            # Pwave amp is 10 times smaller than S
+                            # correction for matching brune scaling to PSD
+                            #calculation normalization
+                            As/=6.0
+                            db = amplitude_power_conversion(As)
 
-                                period = period * (2 ** 0.125)
-                # origin.sort_detections_by_mw()
-                value= origin.min_detection(grid.num_detections)
-                self.summary_mag_list.append(value)
-                lon+=grid.resolution
+                            detection = min_detect(scnl,db, Mw, filtfc)
+                            if(detection):
+                                origin.add_to_collection(Solution(scnl, Mw, delta_km/1000))
+                                break
 
-            lat+=grid.resolution
+                            period = period * (2 ** 0.125)
+            #since we are considering detection, sort by mag asc
+            Solution.sort_by_mag(origin.solutions)
+
+            # value= origin.min_detection(grid.num_solutions)
+            # self.summary_mag_list.append(value)
+
         #Tally up each scnls detection success
-        Origin.increment_solutions(grid.num_detections)
+        Origin.increment_solutions(grid.num_solutions)
+        #sort all solutions by min_mag in asc order
+
         #sort all scnls by solutions in reverse (desc order)
+        #to determine station performance
         Scnl.sort_by_solutions()
+
+    '''
+        profile all origin solutions by distance to origin. Does NOT consider
+        site characteristics such as noise
+    '''
+    def profile_spatially(self):
+        print('Profiling spatially...')
+        lat = self.origin_collection()[0].lat
+        for origin in self.origin_collection():
+            if lat != origin.lat and origin.lat%2.0==0.0:
+                lat = origin.lat
+                print(lat)
+            # for every scnl
+            for key in self.scnl_collections():
+                for scnl in self.scnl_collections()[key]:
+                    delta_rad, delta_km = find_distance(origin, scnl)  # km
+                    origin.add_to_collection(Solution(scnl, None, delta_km))
+            Solution.sort_by_distance(origin.solutions)
 
 
     '''
@@ -262,31 +343,19 @@ class MagD:
                 #print("Data set {}".format(key))
                 for scnl in self.scnl_collections()[key]:
                     #do some formating
-                    if scnl.solutions==0:
+                    if scnl.contrib_solutions==0:
                         percent="N/A"
                     else:
-                        c=(scnl.solutions/calcs)*100
+                        c=(scnl.contrib_solutions/calcs)*100
                         percent="%.2f%%"%c
                     sta=scnl.sta
                     while len(sta) < 4:
                         sta=sta + " "
-                    sols=str(scnl.solutions)
+                    sols=str(scnl.contrib_solutions)
                     while len(sols) < 6:
                         sols=" " + sols
                     summary.append("{}  {}  {}  {}".format(sta, scnl.chan, sols, percent))
         return "\n".join(summary)
-
-    # '''for set return lat,lon, and solutions
-    #     as three unique lists'''
-    # def get_xyz_lists(self,key):
-    #   lats=[]
-    #   lons=[]
-    #   sols=[]
-    #   for scnl in self.scnl_collections()[key]:
-    #       lats.append(scnl.lat)
-    #       lons.append(scnl.lon)
-    #       sols.append(scnl.solutions)
-    #   return lats, lons, sols
 
 
     '''Assumes sorted! Find the index  where Scnls did not contribute.
@@ -296,7 +365,7 @@ class MagD:
     def get_no_solution_index(self,key):
       i=0
       for scnl in self.scnl_collections()[key]:
-          if scnl.solutions > 0:
+          if scnl.contrib_solutions > 0:
               i+=1
               next
           else:

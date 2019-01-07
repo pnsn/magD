@@ -1,5 +1,8 @@
 '''
-Class for MapGrid
+MapGrid is a matrix for contouring with other attributesself.
+It is instantiated with a conf file, and a 'type'
+conf file is of form:
+
 These are saved as a pickled file
 
 '''
@@ -22,7 +25,7 @@ class MapGrid:
         self.lat_max = float(conf['lat_max'])
         self.lon_min = float(conf['lon_min'])
         self.lon_max = float(conf['lon_max']) + self.resolution
-        self.num_detections = int(conf['num_detections'])
+        self.num_solutions = int(conf['num_solutions'])
         self.nyquist_correction = float(conf['nyquist_corretion'])
         self.mu = float(conf['mu'])
         self.qconst = float(conf['qconst'])
@@ -54,7 +57,7 @@ class MapGrid:
     def dimension(self):
         return(self.numrows(), self.numcols())
 
-
+    #reshape to 2dim list
     def make_matrix(self, z):
         self.matrix = np.reshape(z, (self.numrows(), self.numcols()))
 

@@ -23,7 +23,7 @@ class Scnl:
       self.df=None
       self.powers = []
       self.frequencies = []
-      self.solutions=0
+      self.contrib_solutions=0 #how many times station contributed to a solution
       self.data_set=data_set
       Scnl.add_to_collections(self)
 
@@ -100,10 +100,10 @@ class Scnl:
 
 
   @classmethod
-  #in place sort collections
+  #in place sort collections to determine station performance
   def sort_by_solutions(cls):
       for key in cls.collections:
-          cls.collections[key].sort(key=lambda x: x.solutions, reverse=True)
+          cls.collections[key].sort(key=lambda x: x.contrib_solutions, reverse=True)
 
   #create a dictionary for json output
   #FIXME this needs to change to collections object
