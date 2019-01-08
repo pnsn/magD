@@ -71,3 +71,20 @@ class PlotMagD():
     def outfile_with_stamp(self,path):
         return "{}{}-{}-{}.png".format(path, self.mapGrid.name,
             datetime.datetime.now().strftime("%Y%m%d%H%M%S"),self.mapGrid.type)
+
+    '''
+        calc blindzone distances in km
+        Xbz=((focal_distance*vs/vp)^2 -depth^2)^1/2
+    '''
+
+    def calc_blindzone(self, epi_distance, velocity_p, velocity_s, depth):
+        fd = self.focal_distance(epi_distance, depth)
+        vd2 = math.pow((velocity_s/velocity_p)*fd, 2)
+        d2 = math.pow(depth, 2)
+        if vd2 -d2 < 0: #no imaginary numbers
+            return 0
+        return math.sqrt(vd2 -d2)
+
+    #pythagorean theorem
+    def focal_distance(self, epi_distance, depth):
+        return(math.sqrt(math.pow(depth, 2) + math.pow(epi_distance, 2)))

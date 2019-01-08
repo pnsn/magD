@@ -1,5 +1,5 @@
 '''
-MapGrid is a matrix for contouring with other attributesself.
+MapGrid is a matrix for contouring with other attributes.
 It is instantiated with a conf file, and a 'type'
 conf file is of form:
 
