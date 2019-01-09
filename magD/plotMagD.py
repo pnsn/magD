@@ -42,15 +42,15 @@ class PlotMagD():
                     urcrnrlat=bounds[1]-2, resolution='i',projection=projection,
                     lon_0=lon_0,lat_0=lat_0)
 
-    '''
-        contour levels: min,max and steps
-        create array of floats from min to max in steps of step
-    '''
-    def create_contour_levels(self, z, step):
-        mag_min=int(np.amin(z)*10)
-        mag_max=int(np.amax(z)*10)
-        levels=[x / 10.0 for x in range(mag_min, mag_max, step)]
-        return levels
+    # '''
+    #     contour levels: min,max and steps
+    #     create array of floats from min to max in steps of step
+    # '''
+    # def create_contour_levels(self, z, step):
+    #     mag_min=int(np.amin(z)*10)
+    #     mag_max=int(np.amax(z)*10)
+    #     levels=[x / 10.0 for x in range(mag_min, mag_max, step)]
+    #     return levels
 
 
 
