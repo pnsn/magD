@@ -5,9 +5,9 @@ import math
 import pandas as pd
 
 class Scnl:
-  collections ={}
-  def __init__(self,sta,chan,net,loc,samprate=None,lat=None,lon=None,
-                    depth=None,data_set=None, inst_id=None,desc=None):
+  def __init__(self, sta, chan, net, loc, samprate=None, lat=None, lon=None,
+                    depth=None, data_set=None, color=None, symbol=None,
+                    inst_id=None, desc=None):
       self.sta=sta
       self.chan=chan
       self.net=net
@@ -16,6 +16,9 @@ class Scnl:
       self.lat=lat
       self.lon=lon
       self.depth=depth
+      self.data_set=data_set
+      self.color=color
+      self.symbol=symbol
       self.inst_id=inst_id
       self.desc=desc
       self.base=None
@@ -24,8 +27,6 @@ class Scnl:
       self.powers = []
       self.frequencies = []
       self.contrib_solutions=0 #how many times station contributed to a solution
-      self.data_set=data_set
-      Scnl.add_to_collections(self)
 
 
 
@@ -100,10 +101,11 @@ class Scnl:
 
 
   @classmethod
-  #in place sort collections to determine station performance
-  def sort_by_solutions(cls):
-      for key in cls.collections:
-          cls.collections[key].sort(key=lambda x: x.contrib_solutions, reverse=True)
+  #in place sort of scnl collections to determine station performance
+  def sort_by_solutions(cls, collections):
+      for key in collections:
+          collections[key].sort(key=lambda x: x.contrib_solutions, reverse=True)
+          return collections
 
   #create a dictionary for json output
   #FIXME this needs to change to collections object

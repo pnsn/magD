@@ -159,3 +159,7 @@ def azimuthal_gap(scnls,source):
         if gap > max_gap:
             max_gap=gap
     return max_gap
+
+#pythagorean theorem
+def focal_distance(epi_distance, depth):
+    return(math.sqrt(math.pow(depth, 2) + math.pow(epi_distance, 2)))

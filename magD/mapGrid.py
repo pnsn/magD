@@ -9,6 +9,7 @@ These are saved as a pickled file
 import numpy as np
 import copy
 from .pickle import *
+from .seis import *
 
 
 '''
@@ -30,7 +31,7 @@ class MapGrid:
         self.mu = float(conf['mu'])
         self.qconst = float(conf['qconst'])
         self.beta = float(conf['beta'])
-        self.pickle_path = conf['pickle_path']
+        self.pickle_root = conf['pickle_root']
         self.matrix = []
         self.scnls = []
 
@@ -67,16 +68,41 @@ class MapGrid:
     def max(self):
         np.max(self.matrix)
 
+    '''
+        calc blindzone distances in km
+        Xbz=((focal_distance*vs/vp)^2 -depth^2)^1/2
+    '''
+    def transform_to_blindzone(self, velocity_p, velocity_s, depth):
+        m =self.matrix
+        for r in range(len(m)):
+            for c in range(len(m[r])):
+                epi_distance= m[r][c]
+                fd = focal_distance(epi_distance, depth)
+                vd2 = math.pow((velocity_s/velocity_p)*fd, 2)
+                d2 = math.pow(depth, 2)
+                if vd2 -d2 < 0: #no imaginary numbers
+                    m[r][c]= 0
+                else:
+                    m[r][c] =math.sqrt(vd2 -d2)
+
+
+
+
+
     # make deep copy, must pass in type
     def copy(self, type, name=None):
         c= copy.deepcopy(self)
         c.type = type
         if name:
             c.name = name
+        else:
+            c.name = type
         return c
+
+    def get_path(self):
+        return get_grid_path(self.pickle_root, self.type, self.name,
+                self.numrows(), self.numcols(), self.resolution)
 
     '''pickle to object'''
     def save(self):
-        path = get_grid_path(self.pickle_path, self.type, self.name,
-                self.numrows(), self.numcols(), self.resolution)
-        set_pickle(path, self)
+        set_pickle(self.get_path(), self)

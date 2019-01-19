@@ -58,26 +58,19 @@ class MagD:
     def __init__(self, grids, data_srcs):
         self.grids=grids
         self.data_srcs = data_srcs
+        self.origins = []
+        self.scnls ={}
         self.summary_mag_list=[]
-
-    '''expose list of scnls'''
-    def scnl_collections(self):
-        return Scnl.collections
-
-    '''expose list of origins'''
-    def origin_collection(self):
-        return Origin.collection
 
     '''return 1dim list of mag levels used for heat map'''
     def build_detection_vector(self):
         d = [o.min_detection(self.grids[0].num_solutions)
-                for o in  self.origin_collection()]
+                for o in  self.origins]
         return np.array(d)
 
-    ''' Add all distances to a list and sort
+    ''' Add all distances to stas that contributed to solution
         considers only stations that are part of the num_solutions
-        solution
-        returns max_gap np array and distance matrix (2dim np array)
+        solution returns distance matrix (2dim np array)
         with the distances of all stations to the origin to allow for
         min/med/ave/max distance matrices
     '''
@@ -85,7 +78,7 @@ class MagD:
     def build_distance_vector(self):
         grid=self.grids[0]
         distances = []
-        for o in self.origin_collection():
+        for o in self.origins:
             dists = []
             for solution in o.solutions[0:grid.num_solutions]:
                 if solution.distance == None:
@@ -99,7 +92,7 @@ class MagD:
     def build_gap_vector(self):
         grid=self.grids[0]
         gaps = []
-        for o in self.origin_collection():
+        for o in self.origins:
             scnls=[d.scnl for d in o.solutions[0:grid.num_solutions]]
             gap=azimuthal_gap(scnls,o)
             gaps.append(gap)
@@ -112,10 +105,9 @@ class MagD:
             sta,chan,loc,net,startime,endtime,code))
 
 
+
     #create and pickle all map_grids
     def build_grids(self):
-        self.read_stations()
-        self.make_origins()
         detection_vector = None
         for grid in self.grids:
             if grid.type == 'detection':
@@ -126,7 +118,7 @@ class MagD:
 
         # evaluate spatially
         if detection_vector is None:
-            self.profile_spatially()
+             self.profile_spatially()
         #distance and gap grids can't be built until it is determined whether
         #stations are prioritized by detection or just spatially
         for grid in self.grids:
@@ -148,19 +140,24 @@ class MagD:
                 grid.make_matrix([np.max(row) for row in distance_matrix])
             elif grid.type=='detection':
                 grid.make_matrix(detection_vector)
-            grid.scnls=self.scnl_collections()
+            grid.scnls=self.scnls
             grid.save()
-        # return self.print_summary()
-
-
-
+        return self.grids
 
 
 
     #read all station in from csv and add them to collection (init)
     def read_stations(self):
         for key in self.data_srcs:
+            color=None
+            symbol=None
             path=self.data_srcs[key]['csv_path']
+            if 'color' in self.data_srcs[key]:
+                color=self.data_srcs[key]['color']
+
+            if 'symbol' in self.data_srcs[key]:
+                symbol=self.data_srcs[key]['symbol']
+
             df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
             #instantiate Scnl from each station
             for i, row in df_stas.iterrows():
@@ -169,8 +166,12 @@ class MagD:
                     row.location="--"
                 if not hasattr(row, 'depth'):
                     row.depth = 0
-                Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
-                    row.lon, row.depth, key)
+                scnl =Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
+                    row.lon, row.depth, key, color, symbol)
+                if key in self.scnls:
+                    self.scnls[key].append(scnl)
+                else:
+                    self.scnls[key] = [scnl]
 
     '''
         retrieve and pickle all pdfs
@@ -178,10 +179,9 @@ class MagD:
         querying iris
     '''
     def get_noise(self):
-        # print noise_keys
         for key in self.data_srcs:
             src = self.data_srcs[key]
-            for scnl in self.scnl_collections()[key]:
+            for scnl in self.scnls[key]:
                 starttime=src['starttime']
                 endtime=src['endtime']
                 if "template_sta" in src:
@@ -197,7 +197,7 @@ class MagD:
                 #try to load noise from pickle file,
                 #if not there go to iris
                 try:
-                    root_path = self.grids[0].pickle_path
+                    root_path = self.grids[0].pickle_root
                     pickle_path= get_noise_path(root_path,"noise",sta,chan,net,loc,
                                 starttime,endtime)
                     data=get_pickle(pickle_path)
@@ -211,9 +211,9 @@ class MagD:
                         self.print_noise_not_found(sta,chan,loc,net,starttime,endtime,resp['code'])
                         scnl.powers=None
             #remove scnls with no power
-            pre_len=len(self.scnl_collections()[key])
-            self.scnl_collections()[key] =[s for s in self.scnl_collections()[key] if s.powers !=None]
-            post_len=len(self.scnl_collections()[key])
+            pre_len=len(self.scnls[key])
+            self.scnls[key] =[s for s in self.scnls[key] if s.powers !=None]
+            post_len=len(self.scnls[key])
             if pre_len !=post_len:
                 print("{} channel(s) found without noise pdf".format(pre_len-post_len))
 
@@ -226,25 +226,24 @@ class MagD:
     '''
 
     def make_origins(self):
-        Origin.clear_collection()
         #find first, all have same attrs
         grid=self.grids[0]
         for lat in grid.lat_list():
             for lon in grid.lon_list():
-                Origin(lat,lon)
+                self.origins.append(Origin(lat,lon))
 
     def profile_noise(self):
         print('Profiling by noise...')
         grid=self.grids[0]
         lat = None
-        for origin in self.origin_collection():
+        for origin in self.origins:
             if lat != origin.lat or lat is None:
                 lat = origin.lat
                 print(lat)
             mindetect = []
             # for every scnl
-            for key in self.scnl_collections():
-                for scnl in self.scnl_collections()[key]:
+            for key in self.scnls:
+                for scnl in self.scnls[key]:
                     if scnl.powers==None:
                         continue
                     if len(scnl.powers)>0:
@@ -292,28 +291,31 @@ class MagD:
             # self.summary_mag_list.append(value)
 
         #Tally up each scnls detection success
-        Origin.increment_solutions(grid.num_solutions)
+        for origin in self.origins:
+            origin.increment_solutions(grid.num_solutions)
         #sort all solutions by min_mag in asc order
 
         #sort all scnls by solutions in reverse (desc order)
         #to determine station performance
-        Scnl.sort_by_solutions()
+        Scnl.sort_by_solutions(self.scnls)
 
     '''
         profile all origin solutions by distance to origin. Does NOT consider
-        site characteristics such as noise
+        site characteristics such as noise.
     '''
     def profile_spatially(self):
         print('Profiling spatially...')
-        lat = self.origin_collection()[0].lat
-        for origin in self.origin_collection():
+        lat = self.origins[0].lat
+        for origin in self.origins:
             if lat != origin.lat and origin.lat%2.0==0.0:
                 lat = origin.lat
                 print(lat)
             # for every scnl
-            for key in self.scnl_collections():
-                for scnl in self.scnl_collections()[key]:
+            for key in self.scnls:
+                for scnl in self.scnls[key]:
+                    # print(scnl.sta)
                     delta_rad, delta_km = find_distance(origin, scnl)  # km
+                    # print(delta_km)
                     origin.add_to_collection(Solution(scnl, None, delta_km))
             Solution.sort_by_distance(origin.solutions)
 
@@ -339,9 +341,9 @@ class MagD:
         if station_summary:
             summary.append("\nSolution Summary for %i calculations:"%calcs)
             summary.append("Sta   Chan Hits    Productivity")
-            for key in self.scnl_collections():
+            for key in self.scnls:
                 #print("Data set {}".format(key))
-                for scnl in self.scnl_collections()[key]:
+                for scnl in self.scnls[key]:
                     #do some formating
                     if scnl.contrib_solutions==0:
                         percent="N/A"
@@ -364,7 +366,7 @@ class MagD:
     '''
     def get_no_solution_index(self,key):
       i=0
-      for scnl in self.scnl_collections()[key]:
+      for scnl in self.scnls[key]:
           if scnl.contrib_solutions > 0:
               i+=1
               next

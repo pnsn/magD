@@ -8,13 +8,30 @@ import numpy as np
 
 
 class Origin:
-    collection = []
+    # collection = []
     # solutions is list of tuples (Mw, scnl)
     def __init__(self, lat, lon):
-        self.lat = lat
-        self.lon = lon
+        self._lat = lat
+        self._lon = lon
         self.solutions = []
-        Origin.collection.append(self)
+
+    #We want to put setters on these for testing
+
+    @property
+    def lat(self):
+        return self._lat
+
+    @lat.setter
+    def lat(self, value):
+        self._lat = value
+
+    @property
+    def lon(self):
+        return self._lon
+
+    @lon.setter
+    def lon(self, value):
+        self._lon = value
 
 
     '''
@@ -32,24 +49,21 @@ class Origin:
     def add_to_collection(self, solution):
         self.solutions.append(solution)
 
-
     '''
       clear collection. Jupyter seems to hang on to them between runs
     '''
-    @classmethod
-    def clear_collection(self):
-        self.collection = []
+    # @classmethod
+    # def clear_collection(self):
+    #     self.collection = []
 
     '''
         Go through each origin and tally up each station that contributed
         to a solution. Only go to the index < num_stas since we are only want stations
         that are part of {num_stas} solution.
     '''
-    @classmethod
-    def increment_solutions(cls,num_stas):
-        for o in cls.collection:
-            i=0
-            for solution in o.solutions:
-                if i < num_stas:
-                    solution.scnl.contrib_solutions+=1
-                    i+=1
+    def increment_solutions(self,num_stas):
+        i=0
+        for solution in o.solutions:
+            if i < num_stas:
+                solution.scnl.contrib_solutions+=1
+                i+=1
