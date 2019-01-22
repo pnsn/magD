@@ -69,8 +69,10 @@ class MapGrid:
         np.max(self.matrix)
 
     '''
+        Take distance matrix
         calc blindzone distances in km
-        Xbz=((focal_distance*vs/vp)^2 -depth^2)^1/2
+        which is just uses pythagoreon theorem:
+            Xbz=((focal_distance*vs/vp)^2 -depth^2)^1/2
     '''
     def transform_to_blindzone(self, velocity_p, velocity_s, depth):
         m =self.matrix
@@ -86,7 +88,32 @@ class MapGrid:
                     m[r][c] =math.sqrt(vd2 -d2)
 
 
+    '''
+    Time to trigger. For every origin calculate the time to trigger
+    using the distance matrix. Calculate distance to focus convert to time using
+    p velocity then add processing time
+    '''
+    def transform_to_trigger_time(self, velocity_p, processing_time, depth):
+        m =self.matrix
+        for r in range(len(m)):
+            for c in range(len(m[r])):
+                epi_distance= m[r][c]
+                tt=trigger_time(epi_distance, velocity_p, processing_time, depth)
+                m[r][c] = tt
 
+    '''
+    Same as trigger time but subtract from s arrival to determine alert time.
+    Transform form distance matrix
+    '''
+    def transform_to_alert_time(self, velocity_p, velocity_s, processing_time, depth):
+        m =self.matrix
+        for r in range(len(m)):
+            for c in range(len(m[r])):
+                epi_distance= m[r][c]
+                tt=trigger_time(epi_distance, velocity_p, processing_time, depth)
+                s_arrival = epi_distance/velocity_s
+                warning_time = s_arrival - tt
+                m[r][c] = max(warning_time , 0)
 
 
     # make deep copy, must pass in type

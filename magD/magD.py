@@ -151,12 +151,16 @@ class MagD:
         for key in self.data_srcs:
             color=None
             symbol=None
+            label=None
             path=self.data_srcs[key]['csv_path']
             if 'color' in self.data_srcs[key]:
                 color=self.data_srcs[key]['color']
 
             if 'symbol' in self.data_srcs[key]:
                 symbol=self.data_srcs[key]['symbol']
+
+            if 'label' in self.data_srcs[key]:
+                label=self.data_srcs[key]['label']
 
             df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
             #instantiate Scnl from each station
@@ -167,7 +171,7 @@ class MagD:
                 if not hasattr(row, 'depth'):
                     row.depth = 0
                 scnl =Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
-                    row.lon, row.depth, key, color, symbol)
+                    row.lon, row.depth, key, color, symbol, label)
                 if key in self.scnls:
                     self.scnls[key].append(scnl)
                 else:

@@ -163,3 +163,10 @@ def azimuthal_gap(scnls,source):
 #pythagorean theorem
 def focal_distance(epi_distance, depth):
     return(math.sqrt(math.pow(depth, 2) + math.pow(epi_distance, 2)))
+
+#for given epi dinstance calculate focal distance, and use velocity of p
+# and processing time to determine trigger time
+
+def trigger_time(epi_distance, velocity_p, processing_time, depth):
+    fd = focal_distance(epi_distance, depth)
+    return (fd / velocity_p) + processing_time
