@@ -33,7 +33,7 @@ class MapGrid:
         self.beta = float(conf['beta'])
         self.pickle_root = conf['pickle_root']
         self.matrix = []
-        self.scnls = []
+        self.destinations = []
 
 
     ''' list of lats from min, max in steps of grid_resolution'''
@@ -105,15 +105,13 @@ class MapGrid:
     Same as trigger time but subtract from s arrival to determine alert time.
     Transform form distance matrix
     '''
-    def transform_to_alert_time(self, velocity_p, velocity_s, processing_time, depth):
+    def transform_to_s_travel_time(self, velocity_s, depth):
         m =self.matrix
         for r in range(len(m)):
             for c in range(len(m[r])):
                 epi_distance= m[r][c]
-                tt=trigger_time(epi_distance, velocity_p, processing_time, depth)
-                s_arrival = epi_distance/velocity_s
-                warning_time = s_arrival - tt
-                m[r][c] = max(warning_time , 0)
+                fd = focal_distance(epi_distance, depth)
+                m[r][c] = fd/velocity_s
 
 
     # make deep copy, must pass in type

@@ -1,19 +1,14 @@
 '''
-Class for solutions. Solutions are the contributing stations to an origin or scnl
-and have a scnl object, distance (m), and min_mag
-
+Class for solutions. Solutions are the contributing objects (scnl, city)
+and are refereced by an origin (source) value can be (distance or magnitude)
 '''
 
 class Solution:
-    def __init__(self, scnl, min_mag=None, distance=None):
-      self.scnl=scnl
-      self.min_mag=min_mag
-      self.distance=distance
+    def __init__(self, obj, value, value_type):
+      self.obj=obj
+      self.value = value
+      self.value_type = value_type
 
     @classmethod
-    def sort_by_mag(cls, collection):
-        collection.sort(key=lambda s: s.min_mag)
-
-    @classmethod
-    def sort_by_distance(cls, collection):
-        collection.sort(key=lambda s: s.distance)
+    def sort_by_value(cls, collection):
+        collection.sort(key=lambda s: s.value)

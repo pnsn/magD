@@ -1,7 +1,7 @@
 '''
 Class for MagD origins
 Instanced are points in a grid and have
-lat, lon and asc list of sorted detectable magnitudes
+lat, lon and asc list of sorted detectable values of mag or distance
 
 '''
 import numpy as np
@@ -35,31 +35,24 @@ class Origin:
 
 
     '''
-        Use index of list to pull out min magnitude detection
-        Assumes list is sorted
+        Use index of sorted list to pull out nth value
+        Assumes list is sorted!!
     '''
 
-    def min_detection(self, num_stas):
-        return self.solutions[num_stas - 1].min_mag
+    def index_solution(self, num_stas):
+        return self.solutions[num_stas - 1].value
 
-
-    def slice_detections(self, num_stas):
-        return [x[1].sta for x in self.solutions][0:num_stas]
 
     def add_to_collection(self, solution):
         self.solutions.append(solution)
 
     '''
-      clear collection. Jupyter seems to hang on to them between runs
-    '''
-    # @classmethod
-    # def clear_collection(self):
-    #     self.collection = []
-
-    '''
         Go through each origin and tally up each station that contributed
         to a solution. Only go to the index < num_stas since we are only want stations
         that are part of {num_stas} solution.
+        This is to keep stats on which stations are earning their keep
+        !!!!FIXME: This hasn't been refactored since introducing generic objects rather
+        than simply using scnl
     '''
     def increment_solutions(self,num_stas):
         i=0

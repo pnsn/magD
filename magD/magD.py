@@ -49,6 +49,7 @@ from .seis import *
 from .iris import get_noise_pdf
 from .pickle import *
 from .solution import Solution
+from .city import City
 
 
 class MagD:
@@ -59,12 +60,12 @@ class MagD:
         self.grids=grids
         self.data_srcs = data_srcs
         self.origins = []
-        self.scnls ={}
+        self.destinations ={}
         self.summary_mag_list=[]
 
     '''return 1dim list of mag levels used for heat map'''
     def build_detection_vector(self):
-        d = [o.min_detection(self.grids[0].num_solutions)
+        d = [o.index_solution(self.grids[0].num_solutions)
                 for o in  self.origins]
         return np.array(d)
 
@@ -81,10 +82,10 @@ class MagD:
         for o in self.origins:
             dists = []
             for solution in o.solutions[0:grid.num_solutions]:
-                if solution.distance == None:
-                    rad, d=find_distance(o, solution)
-                    solution.distance=d/1000
-                dists.append(solution.distance)
+                if solution.value == None:
+                    rad, d=find_distance(o, solution.obj)
+                    solution.value=d/1000
+                dists.append(solution.value)
             dists.sort()
             distances.append(dists)
         return np.array(distances)
@@ -93,7 +94,7 @@ class MagD:
         grid=self.grids[0]
         gaps = []
         for o in self.origins:
-            scnls=[d.scnl for d in o.solutions[0:grid.num_solutions]]
+            scnls=[d.obj for d in o.solutions[0:grid.num_solutions]]
             gap=azimuthal_gap(scnls,o)
             gaps.append(gap)
         return np.array(gaps)
@@ -140,14 +141,14 @@ class MagD:
                 grid.make_matrix([np.max(row) for row in distance_matrix])
             elif grid.type=='detection':
                 grid.make_matrix(detection_vector)
-            grid.scnls=self.scnls
+            grid.destinations = self.destinations
             grid.save()
         return self.grids
 
 
 
-    #read all station in from csv and add them to collection (init)
-    def read_stations(self):
+    #read all destination data (stations or city) in from csv and add them to collection (init)
+    def read_destinations(self):
         for key in self.data_srcs:
             color=None
             symbol=None
@@ -162,20 +163,30 @@ class MagD:
             if 'label' in self.data_srcs[key]:
                 label=self.data_srcs[key]['label']
 
-            df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
-            #instantiate Scnl from each station
-            for i, row in df_stas.iterrows():
-                if len(row.location) ==0:
-                    #if not isinstance(row.location, str) and math.isnan(float(row.location)):
-                    row.location="--"
-                if not hasattr(row, 'depth'):
-                    row.depth = 0
-                scnl =Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
-                    row.lon, row.depth, key, color, symbol, label)
-                if key in self.scnls:
-                    self.scnls[key].append(scnl)
-                else:
-                    self.scnls[key] = [scnl]
+            if self.data_srcs[key]['klass'] =='city':
+                df_city = pd.read_csv(path)
+                #instantiate dests
+                for i, row in df_city.iterrows():
+                    city = City(row.name, row.lat, row.lon, color, symbol, label)
+                    if key in self.destinations:
+                        self.destinations[key].append(city)
+                    else:
+                        self.destinations[key] = [city]
+            if self.data_srcs[key]['klass'] =='scnl':
+                df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
+                #instantiate dests
+                for i, row in df_stas.iterrows():
+                    if len(row.location) ==0:
+                        #if not isinstance(row.location, str) and math.isnan(float(row.location)):
+                        row.location="--"
+                    if not hasattr(row, 'depth'):
+                        row.depth = 0
+                    scnl =Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
+                        row.lon, row.depth, key, color, symbol, label)
+                    if key in self.destinations:
+                        self.destinations[key].append(scnl)
+                    else:
+                        self.destinations[key] = [scnl]
 
     '''
         retrieve and pickle all pdfs
@@ -185,7 +196,7 @@ class MagD:
     def get_noise(self):
         for key in self.data_srcs:
             src = self.data_srcs[key]
-            for scnl in self.scnls[key]:
+            for scnl in self.destinations[key]:
                 starttime=src['starttime']
                 endtime=src['endtime']
                 if "template_sta" in src:
@@ -214,10 +225,10 @@ class MagD:
                     else: #remove from collections
                         self.print_noise_not_found(sta,chan,loc,net,starttime,endtime,resp['code'])
                         scnl.powers=None
-            #remove scnls with no power
-            pre_len=len(self.scnls[key])
-            self.scnls[key] =[s for s in self.scnls[key] if s.powers !=None]
-            post_len=len(self.scnls[key])
+            #remove destinations with no power
+            pre_len=len(self.destinations[key])
+            self.destinations[key] =[s for s in self.destinations[key] if s.powers !=None]
+            post_len=len(self.destinations[key])
             if pre_len !=post_len:
                 print("{} channel(s) found without noise pdf".format(pre_len-post_len))
 
@@ -246,8 +257,8 @@ class MagD:
                 print(lat)
             mindetect = []
             # for every scnl
-            for key in self.scnls:
-                for scnl in self.scnls[key]:
+            for key in self.destinations:
+                for scnl in self.destinations[key]:
                     if scnl.powers==None:
                         continue
                     if len(scnl.powers)>0:
@@ -284,7 +295,9 @@ class MagD:
 
                             detection = min_detect(scnl,db, Mw, filtfc)
                             if(detection):
-                                origin.add_to_collection(Solution(scnl, Mw, delta_km/1000))
+                                # origin.add_to_collection(Solution(scnl, Mw, delta_km/1000))
+                                origin.add_to_collection(Solution(scnl, Mw,
+                                 'magnitude'))
                                 break
 
                             period = period * (2 ** 0.125)
@@ -299,9 +312,9 @@ class MagD:
             origin.increment_solutions(grid.num_solutions)
         #sort all solutions by min_mag in asc order
 
-        #sort all scnls by solutions in reverse (desc order)
+        #sort all by solutions in reverse (desc order)
         #to determine station performance
-        Scnl.sort_by_solutions(self.scnls)
+        Scnl.sort_by_solutions(self.destinations)
 
     '''
         profile all origin solutions by distance to origin. Does NOT consider
@@ -315,13 +328,11 @@ class MagD:
                 lat = origin.lat
                 print(lat)
             # for every scnl
-            for key in self.scnls:
-                for scnl in self.scnls[key]:
-                    # print(scnl.sta)
-                    delta_rad, delta_km = find_distance(origin, scnl)  # km
-                    # print(delta_km)
-                    origin.add_to_collection(Solution(scnl, None, delta_km))
-            Solution.sort_by_distance(origin.solutions)
+            for key in self.destinations:
+                for d in self.destinations[key]:
+                    delta_rad, delta_km = find_distance(origin, d)  # km
+                    origin.add_to_collection(Solution(d, delta_km, 'distance'))
+            Solution.sort_by_value(origin.solutions)
 
 
     '''
@@ -345,9 +356,9 @@ class MagD:
         if station_summary:
             summary.append("\nSolution Summary for %i calculations:"%calcs)
             summary.append("Sta   Chan Hits    Productivity")
-            for key in self.scnls:
+            for key in self.destinations:
                 #print("Data set {}".format(key))
-                for scnl in self.scnls[key]:
+                for scnl in self.destinations[key]:
                     #do some formating
                     if scnl.contrib_solutions==0:
                         percent="N/A"
@@ -370,7 +381,7 @@ class MagD:
     '''
     def get_no_solution_index(self,key):
       i=0
-      for scnl in self.scnls[key]:
+      for scnl in self.destinations[key]:
           if scnl.contrib_solutions > 0:
               i+=1
               next
