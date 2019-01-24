@@ -7,7 +7,7 @@ import pandas as pd
 class Scnl:
   def __init__(self, sta, chan, net, loc, samprate=None, lat=None, lon=None,
                     depth=None, data_set=None, color=None, symbol=None,
-                    label=None, inst_id=None, desc=None):
+                    label=None, size=None, inst_id=None, desc=None):
       self.sta=sta
       self.chan=chan
       self.net=net
@@ -20,6 +20,7 @@ class Scnl:
       self.color=color
       self.symbol=symbol
       self.label=label
+      self.size=size
       self.inst_id=inst_id
       self.desc=desc
       self.base=None

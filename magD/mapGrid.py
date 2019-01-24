@@ -18,22 +18,23 @@ from .seis import *
 '''
 
 class MapGrid:
-    def __init__(self, conf, type):
+    def __init__(self, type, name, resolution,lat_min, lat_max, lon_min, lon_max,
+            num_solutions, nyquist_correction, mu, qconst, beta, pickle_root ):
         self.type = type
-        self.name = conf['name']
-        self.resolution = float(conf['grid_resolution'])
-        self.lat_min = float(conf['lat_min']) + self.resolution
-        self.lat_max = float(conf['lat_max'])
-        self.lon_min = float(conf['lon_min'])
-        self.lon_max = float(conf['lon_max']) + self.resolution
-        self.num_solutions = int(conf['num_solutions'])
-        self.nyquist_correction = float(conf['nyquist_corretion'])
-        self.mu = float(conf['mu'])
-        self.qconst = float(conf['qconst'])
-        self.beta = float(conf['beta'])
-        self.pickle_root = conf['pickle_root']
+        self.name = name
+        self.resolution = resolution
+        self.lat_min = lat_min + self.resolution
+        self.lat_max = lat_max
+        self.lon_min = lon_min
+        self.lon_max = lon_max + self.resolution
+        self.num_solutions = num_solutions
+        self.nyquist_correction = nyquist_correction
+        self.mu = mu
+        self.qconst = qconst
+        self.beta = beta
+        self.pickle_root = pickle_root
         self.matrix = []
-        self.destinations = []
+        self.markers = {}
 
 
     ''' list of lats from min, max in steps of grid_resolution'''

@@ -60,7 +60,7 @@ class MagD:
         self.grids=grids
         self.data_srcs = data_srcs
         self.origins = []
-        self.destinations ={}
+        self.markers ={}
         self.summary_mag_list=[]
 
     '''return 1dim list of mag levels used for heat map'''
@@ -141,52 +141,44 @@ class MagD:
                 grid.make_matrix([np.max(row) for row in distance_matrix])
             elif grid.type=='detection':
                 grid.make_matrix(detection_vector)
-            grid.destinations = self.destinations
+            grid.markers = self.markers
             grid.save()
         return self.grids
 
 
 
-    #read all destination data (stations or city) in from csv and add them to collection (init)
-    def read_destinations(self):
+    #read all marker data (stations or location) in from csv and add them to collection (init)
+    def read_markers(self):
         for key in self.data_srcs:
-            color=None
-            symbol=None
-            label=None
             path=self.data_srcs[key]['csv_path']
-            if 'color' in self.data_srcs[key]:
-                color=self.data_srcs[key]['color']
-
-            if 'symbol' in self.data_srcs[key]:
-                symbol=self.data_srcs[key]['symbol']
-
-            if 'label' in self.data_srcs[key]:
-                label=self.data_srcs[key]['label']
+            color=self.data_srcs[key]['color']
+            symbol=self.data_srcs[key]['symbol']
+            label=self.data_srcs[key]['label']
+            size=self.data_srcs[key]['size']
 
             if self.data_srcs[key]['klass'] =='city':
-                df_city = pd.read_csv(path)
+                df_location = pd.read_csv(path)
                 #instantiate dests
-                for i, row in df_city.iterrows():
-                    city = City(row.name, row.lat, row.lon, color, symbol, label)
-                    if key in self.destinations:
-                        self.destinations[key].append(city)
+                for i, row in df_location.iterrows():
+                    city = City(row.name, row.lat, row.lon, color, symbol, label, size)
+                    if key in self.markers:
+                        self.markers[key].append(city)
                     else:
-                        self.destinations[key] = [city]
+                        self.markers[key] = [city]
             if self.data_srcs[key]['klass'] =='scnl':
                 df_stas = pd.read_csv(path,converters={'location': lambda x: str(x)})
                 #instantiate dests
                 for i, row in df_stas.iterrows():
                     if len(row.location) ==0:
-                        #if not isinstance(row.location, str) and math.isnan(float(row.location)):
                         row.location="--"
                     if not hasattr(row, 'depth'):
                         row.depth = 0
                     scnl =Scnl(row.sta, row.chan, row.net,row.location,row.rate, row.lat,
-                        row.lon, row.depth, key, color, symbol, label)
-                    if key in self.destinations:
-                        self.destinations[key].append(scnl)
+                        row.lon, row.depth, key, color, symbol, label, size)
+                    if key in self.markers:
+                        self.markers[key].append(scnl)
                     else:
-                        self.destinations[key] = [scnl]
+                        self.markers[key] = [scnl]
 
     '''
         retrieve and pickle all pdfs
@@ -196,7 +188,7 @@ class MagD:
     def get_noise(self):
         for key in self.data_srcs:
             src = self.data_srcs[key]
-            for scnl in self.destinations[key]:
+            for scnl in self.markers[key]:
                 starttime=src['starttime']
                 endtime=src['endtime']
                 if "template_sta" in src:
@@ -225,10 +217,10 @@ class MagD:
                     else: #remove from collections
                         self.print_noise_not_found(sta,chan,loc,net,starttime,endtime,resp['code'])
                         scnl.powers=None
-            #remove destinations with no power
-            pre_len=len(self.destinations[key])
-            self.destinations[key] =[s for s in self.destinations[key] if s.powers !=None]
-            post_len=len(self.destinations[key])
+            #remove markers with no power
+            pre_len=len(self.markers[key])
+            self.markers[key] =[s for s in self.markers[key] if s.powers !=None]
+            post_len=len(self.markers[key])
             if pre_len !=post_len:
                 print("{} channel(s) found without noise pdf".format(pre_len-post_len))
 
@@ -257,8 +249,8 @@ class MagD:
                 print(lat)
             mindetect = []
             # for every scnl
-            for key in self.destinations:
-                for scnl in self.destinations[key]:
+            for key in self.markers:
+                for scnl in self.markers[key]:
                     if scnl.powers==None:
                         continue
                     if len(scnl.powers)>0:
@@ -314,7 +306,7 @@ class MagD:
 
         #sort all by solutions in reverse (desc order)
         #to determine station performance
-        Scnl.sort_by_solutions(self.destinations)
+        Scnl.sort_by_solutions(self.markers)
 
     '''
         profile all origin solutions by distance to origin. Does NOT consider
@@ -328,8 +320,8 @@ class MagD:
                 lat = origin.lat
                 print(lat)
             # for every scnl
-            for key in self.destinations:
-                for d in self.destinations[key]:
+            for key in self.markers:
+                for d in self.markers[key]:
                     delta_rad, delta_km = find_distance(origin, d)  # km
                     origin.add_to_collection(Solution(d, delta_km, 'distance'))
             Solution.sort_by_value(origin.solutions)
@@ -356,9 +348,9 @@ class MagD:
         if station_summary:
             summary.append("\nSolution Summary for %i calculations:"%calcs)
             summary.append("Sta   Chan Hits    Productivity")
-            for key in self.destinations:
+            for key in self.markers:
                 #print("Data set {}".format(key))
-                for scnl in self.destinations[key]:
+                for scnl in self.markers[key]:
                     #do some formating
                     if scnl.contrib_solutions==0:
                         percent="N/A"
@@ -381,7 +373,7 @@ class MagD:
     '''
     def get_no_solution_index(self,key):
       i=0
-      for scnl in self.destinations[key]:
+      for scnl in self.markers[key]:
           if scnl.contrib_solutions > 0:
               i+=1
               next
