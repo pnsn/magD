@@ -1,14 +1,14 @@
 '''
-Class for events. Used to display real or test event data
-
+Class for earthquakes...
 '''
-
 class Event:
-  collection = []
-  def __init__(self, lat, mag, color, symbol):
-      self.lat = lat
-      self.lon = lon
-      self.mag = mag
-      self.color = color
-      self.symbol = symbol
-      Event.collection.append(self)
+    def __init__(self, name, lat, lon, depth, mag, color, symbol, label, size):
+        self.name = name
+        self.lat = lat
+        self.lon = lon
+        self.depth = depth
+        self.mag = mag
+        self.color = color
+        self.symbol = symbol
+        self.label = label
+        self.size = size

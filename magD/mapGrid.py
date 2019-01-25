@@ -23,10 +23,10 @@ class MapGrid:
         self.type = type
         self.name = name
         self.resolution = resolution
-        self.lat_min = lat_min + self.resolution
+        self.lat_min = lat_min
         self.lat_max = lat_max
         self.lon_min = lon_min
-        self.lon_max = lon_max + self.resolution
+        self.lon_max = lon_max
         self.num_solutions = num_solutions
         self.nyquist_correction = nyquist_correction
         self.mu = mu
@@ -35,14 +35,24 @@ class MapGrid:
         self.pickle_root = pickle_root
         self.matrix = []
         self.markers = {}
+        self.firstn_solutions =[]
 
+
+    def append_to_solutions(self, list):
+        self.firstn_solutions = list
 
     ''' list of lats from min, max in steps of grid_resolution'''
     def lat_list(self):
+        #single point case e.g. eq
+        if self.lat_min == self.lat_max:
+            return [self.lat_min]
         return np.arange(self.lat_min, self.lat_max, self.resolution)
 
     ''' list of lons from min, max in steps of grid_resolution'''
     def lon_list(self):
+        #single point case e.g. eq
+        if self.lon_min == self.lon_max:
+            return [self.lon_min]
         return np.arange(self.lon_min, self.lon_max, self.resolution)
 
     '''Can't rembember what the f' cn is but it seems important and scientific'''

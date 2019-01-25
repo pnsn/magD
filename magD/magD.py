@@ -50,6 +50,7 @@ from .iris import get_noise_pdf
 from .pickle import *
 from .solution import Solution
 from .city import City
+from .event import Event
 
 
 class MagD:
@@ -84,6 +85,7 @@ class MagD:
             for solution in o.solutions[0:grid.num_solutions]:
                 if solution.value == None:
                     rad, d=find_distance(o, solution.obj)
+                    print(d)
                     solution.value=d/1000
                 dists.append(solution.value)
             dists.sort()
@@ -119,14 +121,13 @@ class MagD:
 
         # evaluate spatially
         if detection_vector is None:
-             self.profile_spatially()
+            self.profile_spatially()
         #distance and gap grids can't be built until it is determined whether
         #stations are prioritized by detection or just spatially
         for grid in self.grids:
             if re.match("^dist", grid.type) is not None:
                 distance_matrix=self.build_distance_vector()
                 break
-
 
         for grid in self.grids:
             if grid.type=='gap':
@@ -156,10 +157,20 @@ class MagD:
             label=self.data_srcs[key]['label']
             size=self.data_srcs[key]['size']
 
-            if self.data_srcs[key]['klass'] =='city':
-                df_location = pd.read_csv(path)
+            if self.data_srcs[key]['klass'] =='event':
+                df_event = pd.read_csv(path)
                 #instantiate dests
-                for i, row in df_location.iterrows():
+                for i, row in df_event.iterrows():
+                    event = Event(row.name, row.lat, row.lon, row.depth,  row.mag, color, symbol, label, size)
+                    if key in self.markers:
+                        self.markers[key].append(event)
+                    else:
+                        self.markers[key] = [event]
+
+            if self.data_srcs[key]['klass'] =='city':
+                df_city = pd.read_csv(path)
+                #instantiate dests
+                for i, row in df_city.iterrows():
                     city = City(row.name, row.lat, row.lon, color, symbol, label, size)
                     if key in self.markers:
                         self.markers[key].append(city)
@@ -238,6 +249,7 @@ class MagD:
         for lat in grid.lat_list():
             for lon in grid.lon_list():
                 self.origins.append(Origin(lat,lon))
+
 
     def profile_noise(self):
         print('Profiling by noise...')
@@ -318,13 +330,17 @@ class MagD:
         for origin in self.origins:
             if lat != origin.lat and origin.lat%2.0==0.0:
                 lat = origin.lat
-                print(lat)
             # for every scnl
             for key in self.markers:
                 for d in self.markers[key]:
                     delta_rad, delta_km = find_distance(origin, d)  # km
                     origin.add_to_collection(Solution(d, delta_km, 'distance'))
             Solution.sort_by_value(origin.solutions)
+        #if this is a single point, keep the first n solutions for better plotting
+        if len(self.origins) ==1:
+            for g in self.grids:
+                solutions = origin.solutions[0:g.num_solutions]
+                g.append_to_solutions(solutions)
 
 
     '''
