@@ -85,7 +85,6 @@ class MagD:
             for solution in o.solutions[0:grid.num_solutions]:
                 if solution.value == None:
                     rad, d=find_distance(o, solution.obj)
-                    print(d)
                     solution.value=d/1000
                 dists.append(solution.value)
             dists.sort()

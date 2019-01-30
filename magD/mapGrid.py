@@ -135,10 +135,10 @@ class MapGrid:
             c.name = type
         return c
 
+    #full path to pickle path
     def get_path(self):
         return get_grid_path(self.pickle_root, self.type, self.name,
                 self.numrows(), self.numcols(), self.resolution)
-
     '''pickle to object'''
     def save(self):
         set_pickle(self.get_path(), self)
