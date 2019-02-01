@@ -28,5 +28,5 @@ Basemap is the mapping library for matplotlib. It needs to be built against geos
 ## OSX
 
 `brew install geos`
-
+`brew install proj`
 `pip3 install https://github.com/matplotlib/basemap/archive/v1.1.0.tar.gz`
