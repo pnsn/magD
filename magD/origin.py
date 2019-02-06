@@ -13,7 +13,8 @@ class Origin:
     def __init__(self, lat, lon):
         self._lat = lat
         self._lon = lon
-        self.solutions = []
+        self.dist_solutions = []
+        self.mag_solutions = []
 
     #We want to put setters on these for testing
 
@@ -34,18 +35,11 @@ class Origin:
         self._lon = value
 
 
-    '''
-        Use index of sorted list to pull out nth value
-        Assumes list is sorted!!
-    '''
+    def add_to_mag_solutions(self, solution):
+        self.mag_solutions.append(solution)
 
-    def index_solution(self, num_stas):
-        return self.solutions[num_stas - 1].value
-
-
-    def add_to_collection(self, solution):
-        self.solutions.append(solution)
-
+    def add_to_dist_solutions(self, solution):
+        self.dist_solutions.append(solution)
     '''
         Go through each origin and tally up each station that contributed
         to a solution. Only go to the index < num_stas since we are only want stations
@@ -54,9 +48,9 @@ class Origin:
         !!!!FIXME: This hasn't been refactored since introducing generic objects rather
         than simply using scnl
     '''
-    def increment_solutions(self,num_stas):
-        i=0
-        for solution in o.solutions:
-            if i < num_stas:
-                solution.scnl.contrib_solutions+=1
-                i+=1
+    # def increment_solutions(self,num_stas):
+    #     i=0
+    #     for solution in self.solutions:
+    #         if i < num_stas:
+    #             solution.obj.contrib_solutions+=1
+    #             i+=1

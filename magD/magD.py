@@ -64,11 +64,18 @@ class MagD:
         self.markers ={}
         self.summary_mag_list=[]
 
-    '''return 1dim list of mag levels used for heat map'''
+    '''
+        return 1dim list of mag levels used for heat map
+        simply find the nth element of sorted Solutions
+        where n is the number of stations required
+        so if n = 4, find the fourth largest magnitude
+    '''
     def build_detection_vector(self):
-        d = [o.index_solution(self.grids[0].num_solutions)
-                for o in  self.origins]
-        return np.array(d)
+        detections =[]
+        index = self.grids[0].num_solutions -1
+        for o in self.origins:
+            detections.append(o.mag_solutions[index].value)
+        return np.array(detections)
 
     ''' Add all distances to stas that contributed to solution
         considers only stations that are part of the num_solutions
@@ -77,27 +84,30 @@ class MagD:
         min/med/ave/max distance matrices
     '''
 
-    def build_distance_vector(self):
+    def build_distance_matrix(self):
         grid=self.grids[0]
         distances = []
         for o in self.origins:
             dists = []
-            for solution in o.solutions[0:grid.num_solutions]:
+            for solution in o.dist_solutions[0:grid.num_solutions]:
                 if solution.value == None:
                     rad, d=find_distance(o, solution.obj)
-                    solution.value=d/1000
+                    solution.value=d
                 dists.append(solution.value)
             dists.sort()
             distances.append(dists)
         return np.array(distances)
 
+    '''
+        Return 1 dim array of azimuthal gaps using distance solutions
+    '''
     def build_gap_vector(self):
         grid=self.grids[0]
         gaps = []
         for o in self.origins:
-            scnls=[d.obj for d in o.solutions[0:grid.num_solutions]]
-            gap=azimuthal_gap(scnls,o)
-            gaps.append(gap)
+            scnls=[d.obj for d in o.dist_solutions[0:grid.num_solutions]]
+            max_gap=azimuthal_gap(scnls,o)
+            gaps.append(max_gap)
         return np.array(gaps)
 
 
@@ -125,8 +135,9 @@ class MagD:
         #stations are prioritized by detection or just spatially
         for grid in self.grids:
             if re.match("^dist", grid.type) is not None:
-                distance_matrix=self.build_distance_vector()
+                distance_matrix=self.build_distance_matrix()
                 break
+
 
         for grid in self.grids:
             if grid.type=='gap':
@@ -254,10 +265,11 @@ class MagD:
         print('Profiling by noise...')
         grid=self.grids[0]
         lat = None
+        print("lat:", end="")
         for origin in self.origins:
             if lat != origin.lat or lat is None:
                 lat = origin.lat
-                print(lat)
+                print(str(lat) + ", ", end="")
             mindetect = []
             # for every scnl
             for key in self.markers:
@@ -298,26 +310,31 @@ class MagD:
 
                             detection = min_detect(scnl,db, Mw, filtfc)
                             if(detection):
-                                # origin.add_to_collection(Solution(scnl, Mw, delta_km/1000))
-                                origin.add_to_collection(Solution(scnl, Mw,
+                                origin.add_to_mag_solutions(Solution(scnl, Mw,
                                  'magnitude'))
+                                origin.add_to_dist_solutions(Solution(scnl,
+                                    delta_km , 'distance'))
                                 break
 
                             period = period * (2 ** 0.125)
             #since we are considering detection, sort by mag asc
-            Solution.sort_by_mag(origin.solutions)
+            Solution.sort_by_value(origin.mag_solutions)
+            Solution.sort_by_value(origin.dist_solutions)
 
             # value= origin.min_detection(grid.num_solutions)
             # self.summary_mag_list.append(value)
 
         #Tally up each scnls detection success
-        for origin in self.origins:
-            origin.increment_solutions(grid.num_solutions)
+        #FIXME: this needs to be updated now that there are two different kind
+        #of solutions
+        # for origin in self.origins:
+        #     origin.increment_solutions(grid.num_solutions)
         #sort all solutions by min_mag in asc order
 
         #sort all by solutions in reverse (desc order)
         #to determine station performance
         Scnl.sort_by_solutions(self.markers)
+        print("...done")
 
     '''
         profile all origin solutions by distance to origin. Does NOT consider
@@ -333,12 +350,12 @@ class MagD:
             for key in self.markers:
                 for d in self.markers[key]:
                     delta_rad, delta_km = find_distance(origin, d)  # km
-                    origin.add_to_collection(Solution(d, delta_km, 'distance'))
+                    origin.add_to_dist_solutions(Solution(d, delta_km, 'distance'))
             Solution.sort_by_value(origin.solutions)
         #if this is a single point, keep the first n solutions for better plotting
         if len(self.origins) ==1:
             for g in self.grids:
-                solutions = origin.solutions[0:g.num_solutions]
+                solutions = origin.dist_solutions[0:g.num_solutions]
                 g.append_to_solutions(solutions)
 
 
