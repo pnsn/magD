@@ -4,7 +4,6 @@ Instanced are points in a grid and have
 lat, lon and asc list of sorted detectable values of mag or distance
 
 '''
-import numpy as np
 
 
 class Origin:
@@ -15,8 +14,6 @@ class Origin:
         self._lon = lon
         self.dist_solutions = []
         self.mag_solutions = []
-
-    #We want to put setters on these for testing
 
     @property
     def lat(self):
@@ -34,7 +31,6 @@ class Origin:
     def lon(self, value):
         self._lon = value
 
-
     def add_to_mag_solutions(self, solution):
         self.mag_solutions.append(solution)
 
@@ -42,10 +38,11 @@ class Origin:
         self.dist_solutions.append(solution)
     '''
         Go through each origin and tally up each station that contributed
-        to a solution. Only go to the index < num_stas since we are only want stations
-        that are part of {num_stas} solution.
+        to a solution. Only go to the index < num_stas since we are only
+        want stations that are part of {num_stas} solution.
         This is to keep stats on which stations are earning their keep
-        !!!!FIXME: This hasn't been refactored since introducing generic objects rather
+        !!!!FIXME: This hasn't been refactored since introducing
+        generic objects rather
         than simply using scnl
     '''
     # def increment_solutions(self,num_stas):
