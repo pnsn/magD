@@ -22,10 +22,12 @@ class Scnl(Location):
         self.base = None
         self.freq0 = None
         self.df = None
+        # FIXME: Power Should be a class
         self.powers = []
         self.frequencies = []
         self.contrib_solutions = 0  # how many times sta contributed 2 solution
 
+    # FIXME: this should be a class
     def set_powers(self, noise):
         '''Accepts list of noise buckets, see iris.py for structure
 
@@ -36,23 +38,23 @@ class Scnl(Location):
         power = float(noise[0].attrib["power"])
         freq = float(noise[0].attrib["freq"])
         self.freq0 = freq
-        # creates a station object that contains freq pairs with the mode/power
         for sample in noise:
             freq2 = float(sample.attrib["freq"])
             if freq2 == freq:
                 if int(sample.attrib["hits"]) > mode:
                     mode = int(sample.attrib["hits"])
                     power = int(sample.attrib["power"])
-                else:
-                    # we want freq1 to determine base
-                    if freq == self.freq0:
-                        self.base = freq2 / self.freq0
-                        self.frequencies.append(freq)
-                        self.powers.append(power)
-                        freq = freq2
-                        mode = int(sample.attrib["hits"])
-                        power = int(sample.attrib["power"])
+            else:
+                # we want freq1 to determine base
+                if freq == self.freq0:
+                    self.base = freq2 / self.freq0
+                self.frequencies.append(freq)
+                self.powers.append(power)
+                freq = freq2
+                mode = int(sample.attrib["hits"])
+                power = int(sample.attrib["power"])
 
+    # FIXME: This is dumb, use dict
     def frequency_power(self, freq):
         '''For frequency, what is the associated modal power?
 

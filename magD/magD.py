@@ -153,7 +153,7 @@ class MagD:
         return self.grids
 
     def read_markers(self):
-        '''read all marker data (stations or location) in from csv
+        '''read all marker data (stations or event) in from csv
 
             create a marker structure:
             self.markers = {
@@ -175,6 +175,7 @@ class MagD:
             self.markers[key]['symbol'] = self.data_srcs[key]['symbol']
             self.markers[key]['label'] = self.data_srcs[key]['label']
             self.markers[key]['size'] = self.data_srcs[key]['size']
+
             if self.data_srcs[key]['klass'] == 'event':
                 df_event = pd.read_csv(path)
                 # instantiate dests
@@ -208,7 +209,7 @@ class MagD:
     def get_noise(self):
         '''retrieve and pickle all pdfs
 
-            if pickled pdf exists use it instead of querying iris
+            if pickled pdf exists, intantiate it
         '''
         for key in self.data_srcs:
             src = self.data_srcs[key]
@@ -247,18 +248,11 @@ class MagD:
             pre_len = len(self.markers[key]['collection'])
             self.markers[key]['collection'] = \
                 [s for s in self.markers[key]['collection']
-                    if s.powers is None]
+                    if s.powers is not None]
             post_len = len(self.markers[key]['collection'])
             if pre_len != post_len:
                 print("{} channel(s) found without noise pdf"
                       .format(pre_len - post_len))
-    '''
-        Walk the grid and for each point on map, find smallest detectable
-        earthquake for each station. Sort stations low mag to high mag at end.
-        Then use index of array as num solutions. For example if
-        num_solutions =5 then use index 4 for the lowest mag detectable
-        at this point.
-    '''
 
     def make_origins(self):
         # find first, all have same attrs
@@ -268,6 +262,14 @@ class MagD:
                 self.origins.append(Origin(lat, lon))
 
     def profile_noise(self):
+        '''Walk the grid.
+
+            For each point on map, find smallest detectable
+            earthquake for every station. Sort stations low mag to high mag at
+            end. Then use index of array as num solutions. For example if
+            num_solutions =5 then use index 4 for the lowest mag detectable
+            at this point.
+        '''
         print('Profiling by noise...')
         grid = self.grids[0]
         lat = None
@@ -280,6 +282,7 @@ class MagD:
             for key in self.markers:
                 for scnl in self.markers[key]['collection']:
                     if scnl.powers is None:
+                        # print("None")
                         continue
                     if len(scnl.powers) > 0:
                         start_period = 0.001
@@ -312,7 +315,6 @@ class MagD:
                             # calculation normalization
                             As /= 6.0
                             db = amplitude_power_conversion(As)
-
                             detection = min_detect(scnl, db, Mw, filtfc)
                             if(detection):
                                 origin.add_to_mag_solutions(Solution(scnl, Mw,

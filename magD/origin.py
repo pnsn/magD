@@ -1,7 +1,8 @@
 '''
 Class for MagD origins
-Instanced are points in a grid and have
+Instancea are points in a grid and have
 lat, lon and asc list of sorted detectable values of mag or distance
+from station or event. Origins make up elements of matrix
 
 '''
 
