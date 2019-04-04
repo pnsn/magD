@@ -9,8 +9,19 @@ These are saved as a pickled file
 import numpy as np
 import math
 import copy
-from .pickle import get_grid_path, set_pickle
-from .seis import focal_distance, trigger_time
+import pandas as pd
+from .pickle import get_grid_path, set_pickle, get_noise_path, get_pickle
+from .seis import focal_distance, trigger_time, find_distance, azimuthal_gap, \
+    fault_radius, moment, moment_magnitude, signal_adjusted_frequency, \
+    geometric_spreading, amplitude, attenuation, amplitude_power_conversion, \
+    min_detect
+from .origin import Origin
+from .iris import get_noise_pdf
+from .solution import Solution
+from .city import City
+from .event import Event
+from .scnl import Scnl
+
 
 '''
     init:
@@ -38,7 +49,13 @@ class MapGrid:
         self.pickle_root = pickle_root
         self.matrix = []
         self.markers = {}
+        self.origins = []
         self.firstn_solutions = []
+
+    def build_origins(self):
+        for lat in self.lat_list():
+            for lon in self.lon_list():
+                self.origins.append(Origin(lat, lon))
 
     def append_to_solutions(self, list):
         self.firstn_solutions = list
@@ -116,10 +133,10 @@ class MapGrid:
                 m[r][c] = tt
 
     def transform_to_s_travel_time(self, velocity_s, depth):
-        '''
-        Same as trigger time but subtract from s arrival to determine
+        '''Same as trigger time but subtract from s arrival to determine
 
-        alert time. Transform form distance matrix '''
+        alert time. Transform form distance matrix
+        '''
         m = self.matrix
         for r in range(len(m)):
             for c in range(len(m[r])):
@@ -147,3 +164,303 @@ class MapGrid:
     '''pickle to object'''
     def save(self):
         set_pickle(self.get_path(), self)
+
+    def get_no_solution_index(self, key):
+        '''Assumes sorted! Find the index  where Scnls did not contribute.
+
+        Find where # of solutions ==0, everything to the right of that
+        will be 0 if sorted
+        '''
+        i = 0
+        for scnl in self.markers[key]['collection']:
+            if scnl.contrib_solutions > 0:
+                i += 1
+                next
+            else:
+                break
+        return i
+
+    def build_matrix(self):
+        '''create and pickle map_grids'''
+        if self.type == 'detection':
+            self.get_noise()
+            self.profile_noise()
+            detection_vector = self.build_detection_vector()
+            self.make_matrix(detection_vector)
+
+        # evaluate spatially
+        else:
+            self.profile_spatially()
+        if self.type == 'gap':
+            self.make_matrix(self.build_gap_vector())
+        else:  # distance
+            distance_matrix = self.build_distance_matrix()
+            if self.type == 'dist_min':
+                self.make_matrix([np.min(row) for row in distance_matrix])
+            elif self.type == 'dist_med':
+                self.make_matrix([np.median(row) for row in distance_matrix])
+            elif self.type == 'dist_ave':
+                self.make_matrix([np.average(row) for row in distance_matrix])
+            elif self.type == 'dist_max':
+                self.make_matrix([np.max(row) for row in distance_matrix])
+
+    def build_markers(self, data_srcs):
+        '''read all marker data (stations or event) in from csv
+
+          accepts a dict of created from config file:
+            data_src ={
+                        'name':{
+                             'csv_path': path/relative/to/approot,
+                             'starttime': startime of pdf query, (optional)
+                             'endtime:' endtime of pdf query, (optional)
+                             'color': marker color,
+                             'label': marker label,
+                             'symbol': marker symbol,
+                             'size': marker size,
+                             'template_sta': proxy_sta,
+                             'template_chan': proxy_chan,
+                             'template_net': proxy_net,
+                             'template_loc': proxy_loc
+                        }
+
+                    }
+
+
+            create a marker structure:
+            self.markers = {
+                'config1_name':
+                    'color': marker_color,
+                    'size': marker_size,
+                    'label': marker_label,
+                    'symbol': marker_symbol
+                    'starttime': start of pdf (optional)
+                    'endtime': end of pdf (optional)
+                    'collection': [mkr_obj1, mkr_obj2,..., mkr_objn]
+            }
+         '''
+
+        for key in data_srcs:
+            src = data_srcs[key]
+            path = src['csv_path']
+            # stub out marker dict
+            self.markers[key] = {}
+            self.markers[key]['collection'] = []
+            self.markers[key]['color'] = src['color']
+            self.markers[key]['symbol'] = src['symbol']
+            self.markers[key]['label'] = src['label']
+            self.markers[key]['size'] = src['size']
+            if 'starttime' in src and 'endtime' in src:
+                self.markers[key]['starttime'] = src['starttime']
+                self.markers[key]['endtime'] = src['endtime']
+
+            if src['klass'] == 'event':
+                df_event = pd.read_csv(path)
+                # instantiate dests
+
+                for i, row in df_event.iterrows():
+                    event = Event(row.name, row.lat, row.lon, row.depth,
+                                  row.mag)
+                    self.markers[key]['collection'].append(event)
+
+            if src['klass'] == 'city':
+                df_city = pd.read_csv(path)
+                # instantiate dests
+                for i, row in df_city.iterrows():
+                    city = City(row.name, row.lat, row.lon)
+                    self.markers[key]['collection'].append(city)
+
+            if src['klass'] == 'scnl':
+                df_stas = pd.read_csv(path, converters={
+                                      'location': lambda x: str(x)})
+                # instantiate dests
+                proxy_scnl = None
+                if "template_sta" in src:
+                    proxy_scnl = Scnl(src['sta'], src['chan'], src['net'],
+                                      src['loc'])
+                for i, row in df_stas.iterrows():
+                    if len(row.location) == 0:
+                        row.location = "--"
+                    if not hasattr(row, 'depth'):
+                        row.depth = 0
+                    scnl = Scnl(row.sta, row.chan, row.net, row.location,
+                                row.rate, row.lat, row.lon, row.depth, key,
+                                None, None, proxy_scnl)
+
+                    self.markers[key]['collection'].append(scnl)
+
+    def build_detection_vector(self):
+        '''find all sorted origins at index self.num_solutions -1'''
+        detections = []
+        index = self.num_solutions - 1
+        for o in self.origins:
+            detections.append(o.mag_solutions[index].value)
+        return np.array(detections)
+
+    def build_distance_matrix(self):
+        '''Add all distances to stas that contributed to solution
+
+            considers only stations that are part of the num_solutions
+            solution returns distance matrix (2dim np array)
+            with the distances of all stations to the origin to allow for
+            min/med/ave/max distance matrices
+        '''
+        distances = []
+        for o in self.origins:
+            dists = []
+            for solution in o.dist_solutions[0:self.num_solutions]:
+                if solution.value is None:
+                    rad, d = find_distance(o, solution.obj)
+                    solution.value = d
+                dists.append(solution.value)
+            dists.sort()
+            distances.append(dists)
+        return np.array(distances)
+
+    def build_gap_vector(self):
+        '''Return 1 dim array of azimuthal gaps using distance solutions '''
+        gaps = []
+        for o in self.origins:
+            scnls = [d.obj for d in o.dist_solutions[0:self.num_solutions]]
+            max_gap = azimuthal_gap(scnls, o)
+            gaps.append(max_gap)
+        return np.array(gaps)
+
+    def get_noise(self):
+        '''retrieve all noise pdfs and pickle
+
+            if pickled pdf exists, intantiate it
+        '''
+        for key in self.markers:
+            marker_set = self.markers[key]
+            starttime = marker_set['starttime']
+            endtime = marker_set['endtime']
+            for scnl in marker_set['collection']:
+                s = scnl
+                if scnl.proxy_scnl is not None:
+                    s = scnl.proxy_scnl
+                sta = s.sta
+                chan = s.chan
+                net = s.net
+                loc = s.loc
+                # try to load noise from pickle file, if not there go to iris
+                try:
+                    root_path = self.pickle_root
+                    pickle_path = get_noise_path(root_path, "noise", sta, chan,
+                                                 net, loc, starttime, endtime)
+                    data = get_pickle(pickle_path)
+                    scnl.set_powers(data)
+                except FileNotFoundError:
+                    resp = get_noise_pdf(sta, chan, net, loc, starttime,
+                                         endtime)
+                    if resp['code'] == 200:
+                        set_pickle(pickle_path, resp['data'])
+                        scnl.set_powers(resp['data'])
+                    else:  # remove from collections
+                        self.print_noise_not_found(sta, chan, loc, net,
+                                                   starttime, endtime,
+                                                   resp['code'])
+                        scnl.powers = None
+            # remove markers with no power
+            pre_len = len(self.markers[key]['collection'])
+            self.markers[key]['collection'] = \
+                [s for s in self.markers[key]['collection']
+                    if s.powers is not None]
+            post_len = len(self.markers[key]['collection'])
+            if pre_len != post_len:
+                print("{} channel(s) found without noise pdf"
+                      .format(pre_len - post_len))
+
+    def print_noise_not_found(self, sta, chan, loc, net,
+                              startime, endtime, code):
+        '''message for noise pdf not found'''
+        print("{}:{}:{}:{} startime: {}, endtime {} returned HTTP code {}"
+              .format(sta, chan, loc, net, startime, endtime, code))
+
+    def profile_noise(self):
+        '''Walk the grid.
+
+            For each point on map, find smallest detectable
+            earthquake for every station. Sort stations low mag to high mag at
+            end. Then use index of array as num solutions. For example if
+            num_solutions =5 then use index 4 for the lowest mag detectable
+            at this point.
+        '''
+        print('Profiling by noise...')
+        lat = None
+        print("lat:", end="")
+        for origin in self.origins:
+            if lat != origin.lat or lat is None:
+                lat = origin.lat
+                print(str(lat) + ", ", end="")
+            # for every scnl
+            for key in self.markers:
+                for scnl in self.markers[key]['collection']:
+                    if scnl.powers is None:
+                        continue
+                    if len(scnl.powers) > 0:
+                        start_period = 0.001
+                        end_period = 280
+                        # Goes through all the freqs, i.e. from small to large
+                        # Mw this way the first detection will be the min Mw
+                        period = start_period
+                        # Calculate distance between earthquake and station
+                        delta_rad, delta_km = find_distance(origin, scnl)  # km
+                        # for each period
+                        while period <= end_period:
+                            fc = 1 / period
+                            fault_rad = fault_radius(fc, self.beta)
+                            Mo = moment(fault_rad)
+                            Mw = round(moment_magnitude(Mo), 2)
+                            filtfc = signal_adjusted_frequency(Mw, fc)
+                            nyquist = scnl.samprate * self.nyquist_correction
+
+                            if filtfc >= nyquist:
+                                filtfc = nyquist
+
+                            As = amplitude(fc, Mo, self.cn(), delta_km, filtfc)
+                            As *= geometric_spreading(delta_km)
+                            # q value
+                            q = self.qconst * math.pow(nyquist, 0.35)
+                            As *= attenuation(delta_km, q, self.beta, filtfc)
+
+                            # Pwave amp is 10 times smaller than S
+                            # correction for matching brune scaling to PSD
+                            # calculation normalization
+                            As /= 6.0
+                            db = amplitude_power_conversion(As)
+                            detection = min_detect(scnl, db, Mw, filtfc)
+                            if(detection):
+                                origin.add_to_mag_solutions(Solution(scnl, Mw,
+                                                            'magnitude'))
+                                origin.add_to_dist_solutions(Solution(scnl,
+                                                             delta_km,
+                                                             'distance'))
+                                break
+
+                            period = period * (2 ** 0.125)
+            # since we are considering detection, sort by mag asc
+            Solution.sort_by_value(origin.mag_solutions)
+            Solution.sort_by_value(origin.dist_solutions)
+
+    def profile_spatially(self):
+        '''profile all origin solutions by distance to origin.
+
+        Does NOT consider site characteristics such as noise.
+        '''
+        print('Profiling spatially...')
+        lat = self.origins[0].lat
+        for origin in self.origins:
+            if lat != origin.lat and origin.lat % 2.0 == 0.0:
+                lat = origin.lat
+            # for every scnl
+            for key in self.markers:
+                for d in self.markers[key]['collection']:
+                    delta_rad, delta_km = find_distance(origin, d)  # km
+                    origin.add_to_dist_solutions(Solution(d, delta_km,
+                                                          'distance'))
+            Solution.sort_by_value(origin.dist_solutions)
+        # if this is a single point, keep the first n solutions
+        # for better plotting
+        if len(self.origins) == 1:
+            solutions = origin.dist_solutions[0:self.num_solutions]
+            self.append_to_solutions(solutions)

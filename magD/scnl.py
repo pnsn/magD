@@ -7,7 +7,8 @@ from .location import Location
 
 class Scnl(Location):
     def __init__(self, sta, chan, net, loc, samprate=None, lat=None, lon=None,
-                 depth=None, data_set=None, inst_id=None, desc=None):
+                 depth=None, data_set=None, inst_id=None, desc=None,
+                 proxy_scnl=None):
         self.sta = sta
         self.chan = chan
         self.net = net
@@ -19,6 +20,8 @@ class Scnl(Location):
         self.data_set = data_set
         self.inst_id = inst_id
         self.desc = desc
+        # are we using another scnl as a proxy for noise
+        self.proxy_scnl = proxy_scnl
         self.base = None
         self.freq0 = None
         self.df = None
