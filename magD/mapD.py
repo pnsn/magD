@@ -52,6 +52,10 @@ class MapGrid:
         self.origins = []
         self.firstn_solutions = []
 
+    def build_map(self):
+        self.build_origins()
+        self.build_matrix()
+
     def build_origins(self):
         for lat in self.lat_list():
             for lon in self.lon_list():
@@ -275,8 +279,10 @@ class MapGrid:
                 # instantiate dests
                 proxy_scnl = None
                 if "template_sta" in src:
-                    proxy_scnl = Scnl(src['sta'], src['chan'], src['net'],
-                                      src['loc'])
+                    proxy_scnl = Scnl(src['template_sta'],
+                                      src['template_chan'],
+                                      src['template_net'],
+                                      src['template_loc'])
                 for i, row in df_stas.iterrows():
                     if len(row.location) == 0:
                         row.location = "--"
@@ -387,11 +393,13 @@ class MapGrid:
         '''
         print('Profiling by noise...')
         lat = None
-        print("lat:", end="")
+        print("lat: ", end="")
         for origin in self.origins:
             if lat != origin.lat or lat is None:
                 lat = origin.lat
-                print(str(lat) + ", ", end="")
+                # rounding needed since float percision is off
+                if round(lat % 1.0, 1) == 0.0:
+                    print(str(lat) + ", ", end="")
             # for every scnl
             for key in self.markers:
                 for scnl in self.markers[key]['collection']:
@@ -439,8 +447,8 @@ class MapGrid:
 
                             period = period * (2 ** 0.125)
             # since we are considering detection, sort by mag asc
-            Solution.sort_by_value(origin.mag_solutions)
-            Solution.sort_by_value(origin.dist_solutions)
+            origin.sort_and_truncate_solutions(self.num_solutions)
+        print("Feel the noise!")
 
     def profile_spatially(self):
         '''profile all origin solutions by distance to origin.
@@ -458,9 +466,30 @@ class MapGrid:
                     delta_rad, delta_km = find_distance(origin, d)  # km
                     origin.add_to_dist_solutions(Solution(d, delta_km,
                                                           'distance'))
-            Solution.sort_by_value(origin.dist_solutions)
+            origin.sort_and_truncate_solutions(self.num_solutions)
+        # Solution.sort_by_value(origin.dist_solutions)
         # if this is a single point, keep the first n solutions
         # for better plotting
         if len(self.origins) == 1:
             solutions = origin.dist_solutions[0:self.num_solutions]
             self.append_to_solutions(solutions)
+
+    def productive_scnls(self, num=None, type='magnitude'):
+        '''iterate through all origins and increment each contrib'''
+        origins = self.origins
+        # make a list of all scnls
+        scnls = []
+        for key in self.markers:
+            for obj in self.markers[key]['collection']:
+                if hasattr(obj, 'sta'):
+                    # zero it out
+                    obj.contrib_solutions = 0
+                    scnls.append(obj)
+
+        # increment each scnl that took part in a solution
+
+        for o in origins:
+            o.increment_solutions(self.num_solutions, type)
+
+        scnls.sort(key=lambda x: x.contrib_solutions, reverse=True)
+        return scnls[0:num]

@@ -37,18 +37,23 @@ class Origin:
 
     def add_to_dist_solutions(self, solution):
         self.dist_solutions.append(solution)
-    '''
-        Go through each origin and tally up each station that contributed
-        to a solution. Only go to the index < num_stas since we are only
-        want stations that are part of {num_stas} solution.
-        This is to keep stats on which stations are earning their keep
-        !!!!FIXME: This hasn't been refactored since introducing
-        generic objects rather
-        than simply using scnl
-    '''
-    # def increment_solutions(self,num_stas):
-    #     i=0
-    #     for solution in self.solutions:
-    #         if i < num_stas:
-    #             solution.obj.contrib_solutions+=1
-    #             i+=1
+
+    def sort_and_truncate_solutions(self, num_solutions):
+        '''sort then keep only first num_solutions'''
+        # print(", before: " + str(len(self.mag_solutions)), end='')
+        self.dist_solutions.sort(key=lambda x: x.value)
+        self.dist_solutions = self.dist_solutions[0:num_solutions]
+        self.mag_solutions.sort(key=lambda x: x.value)
+        self.mag_solutions = self.mag_solutions[0:num_solutions]
+        # print("after: " + str(len(self.mag_solutions)), end='')
+
+    def increment_solutions(self, num_stas, type):
+        '''increment how many times a scnl was used as part of a solution'''
+        solutions = self.mag_solutions
+        # print(len(solutions))
+        if type == 'distance':
+            solutions = self.dist_solutions
+        for solution in solutions:
+            solution.obj.contrib_solutions += 1
+            # print(solution.obj.sta, end='')
+            # print("=" + str(solution.obj.contrib_solutions))

@@ -31,6 +31,8 @@ class Scnl(Location):
         self.contrib_solutions = 0  # how many times sta contributed 2 solution
 
     # FIXME: this should be a class
+    # Revist when refactoring using IRIS new webservice
+    # that does stats on PDF
     def set_powers(self, noise):
         '''Accepts list of noise buckets, see iris.py for structure
 
