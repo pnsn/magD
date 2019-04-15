@@ -52,17 +52,10 @@ class MapGrid:
         self.origins = []
         self.firstn_solutions = []
 
-    def build_map(self):
-        self.build_origins()
-        self.build_matrix()
-
     def build_origins(self):
         for lat in self.lat_list():
             for lon in self.lon_list():
                 self.origins.append(Origin(lat, lon))
-
-    def append_to_solutions(self, list):
-        self.firstn_solutions = list
 
     def lat_list(self):
         '''list of lats from min, max in steps of grid_resolution'''
@@ -169,20 +162,20 @@ class MapGrid:
     def save(self):
         set_pickle(self.get_path(), self)
 
-    def get_no_solution_index(self, key):
-        '''Assumes sorted! Find the index  where Scnls did not contribute.
-
-        Find where # of solutions ==0, everything to the right of that
-        will be 0 if sorted
-        '''
-        i = 0
-        for scnl in self.markers[key]['collection']:
-            if scnl.contrib_solutions > 0:
-                i += 1
-                next
-            else:
-                break
-        return i
+    # def get_no_solution_index(self, key):
+    #     '''Assumes sorted! Find the index  where Scnls did not contribute.
+    #
+    #     Find where # of solutions ==0, everything to the right of that
+    #     will be 0 if sorted
+    #     '''
+    #     i = 0
+    #     for scnl in self.markers[key]['collection']:
+    #         if scnl.contrib_solutions > 0:
+    #             i += 1
+    #             next
+    #         else:
+    #             break
+    #     return i
 
     def build_matrix(self):
         '''create and pickle map_grids'''
@@ -299,7 +292,7 @@ class MapGrid:
         detections = []
         index = self.num_solutions - 1
         for o in self.origins:
-            detections.append(o.mag_solutions[index].value)
+            detections.append(o.solutions[index].value)
         return np.array(detections)
 
     def build_distance_matrix(self):
@@ -313,7 +306,7 @@ class MapGrid:
         distances = []
         for o in self.origins:
             dists = []
-            for solution in o.dist_solutions[0:self.num_solutions]:
+            for solution in o.solutions[0:self.num_solutions]:
                 if solution.value is None:
                     rad, d = find_distance(o, solution.obj)
                     solution.value = d
@@ -326,7 +319,7 @@ class MapGrid:
         '''Return 1 dim array of azimuthal gaps using distance solutions '''
         gaps = []
         for o in self.origins:
-            scnls = [d.obj for d in o.dist_solutions[0:self.num_solutions]]
+            scnls = [d.obj for d in o.solutions[0:self.num_solutions]]
             max_gap = azimuthal_gap(scnls, o)
             gaps.append(max_gap)
         return np.array(gaps)
@@ -438,11 +431,7 @@ class MapGrid:
                             db = amplitude_power_conversion(As)
                             detection = min_detect(scnl, db, Mw, filtfc)
                             if(detection):
-                                origin.add_to_mag_solutions(Solution(scnl, Mw,
-                                                            'magnitude'))
-                                origin.add_to_dist_solutions(Solution(scnl,
-                                                             delta_km,
-                                                             'distance'))
+                                origin.solutions.append(Solution(scnl, Mw))
                                 break
 
                             period = period * (2 ** 0.125)
@@ -464,18 +453,15 @@ class MapGrid:
             for key in self.markers:
                 for d in self.markers[key]['collection']:
                     delta_rad, delta_km = find_distance(origin, d)  # km
-                    origin.add_to_dist_solutions(Solution(d, delta_km,
-                                                          'distance'))
+                    origin.solutions.append(Solution(d, delta_km))
             origin.sort_and_truncate_solutions(self.num_solutions)
-        # Solution.sort_by_value(origin.dist_solutions)
         # if this is a single point, keep the first n solutions
         # for better plotting
         if len(self.origins) == 1:
-            solutions = origin.dist_solutions[0:self.num_solutions]
-            self.append_to_solutions(solutions)
+            self.firstn_solutions = origin.solutions
 
     def productive_scnls(self, num=None, type='magnitude'):
-        '''iterate through all origins and increment each contrib'''
+        '''iterate through all origins and increment each solution's object'''
         origins = self.origins
         # make a list of all scnls
         scnls = []
@@ -489,7 +475,7 @@ class MapGrid:
         # increment each scnl that took part in a solution
 
         for o in origins:
-            o.increment_solutions(self.num_solutions, type)
+            o.increment_solutions(self.num_solutions)
 
         scnls.sort(key=lambda x: x.contrib_solutions, reverse=True)
         return scnls[0:num]

@@ -1,61 +1,56 @@
 import unittest
-import sys
-import os
-sys.path.append(os.path.abspath('..'))
+# import sys
+# import os
+# sys.path.append(os.path.abspath('..'))
 from magD.origin import Origin
 from magD.scnl import Scnl
-
-# from pprint import pprint
-# import numpy as np
-# import json
-
-
+from magD.solution import Solution
 
 
 class TestOrigin(unittest.TestCase):
 
-  """Test obj creation"""
-  def test_obj_creation(self):
-    #clear the pipes
-    Origin.collection=[]
-    for lat in range(10):
-      Origin(lat, -122)
-    self.assertEqual(len(Origin.collection), 10)
+    def test_sort_and_truncate_solutions(self):
+        """Test sorting and trucation"""
+        o = Origin(45, -122)
+        scnl0 = Scnl("sta", "chan", "net", "loc")
+        scnl1 = Scnl("sta1", "chan", "net", "loc")
+        scnl2 = Scnl("sta2", "chan", "net", "loc")
+        scnl3 = Scnl("sta3", "chan", "net", "loc")
+        o.solutions.append(Solution(scnl0, 10))
+        o.solutions.append(Solution(scnl1, 1))
+        o.solutions.append(Solution(scnl2, 10))
+        o.solutions.append(Solution(scnl3, 200))
 
-  """Test insert order"""
-  def test_insert_order(self):
-    Origin.collection=[]
+        o.sort_and_truncate_solutions(4)
+        self.assertTrue(len(o.solutions), 4)
+        self.assertTrue(o.solutions[0].value, 1)
+        self.assertTrue(o.solutions[1].value, 5)
+        self.assertTrue(o.solutions[2].value, 10)
+        self.assertTrue(o.solutions[3].value, 200)
 
-    o=Origin(45, -122)
-    scnl0=Scnl("sta", "chan", "net")
-    scnl1=Scnl("sta1", "chan", "net")
-    scnl2=Scnl("sta2", "chan", "net")
-    scnl3=Scnl("sta3", "chan", "net")
+        o1 = Origin(45, -121)
+        o1.solutions.append(Solution(scnl0, 10))
+        o1.solutions.append(Solution(scnl1, 1))
+        o1.solutions.append(Solution(scnl2, 10))
+        o1.solutions.append(Solution(scnl3, 200))
 
-
-    o.insertDetection((3,scnl0))
-    self.assertEqual(len(o.solutions),1)
-    '''should move to front'''
-    o.insertDetection((2,scnl1))
-    self.assertEqual(len(o.solutions),2)
-    self.assertEqual(o.solutions[0][1], scnl1)
-    '''should insert at end'''
-    o.insertDetection((5,scnl3))
-    print(o.solutions)
-    self.assertEqual(len(o.solutions),3)
-    self.assertEqual(o.solutions[2][1], scnl3)
-
-  '''test num_stas indexing'''
-
-  # def test_number_stas_index(self):
-  #   o=Origin(45, -122)
-  #   scnl=Scnl("sta", "chan", "net")
-  #   for mag in range(4,0,-1):
-  #     o.insertDetection(mag,scnl)
-  #   # self.assertEqual(o.min_detection(3), 3)
+        o1.sort_and_truncate_solutions(2)
+        self.assertTrue(len(o1.solutions), 2)
+        self.assertTrue(o1.solutions[0].value, 1)
+        self.assertTrue(o1.solutions[1].value, 5)
 
 
-
+        # o.insertDetection((3,scnl0))
+        # self.assertEqual(len(o.solutions),1)
+        # '''should move to front'''
+        # o.insertDetection((2,scnl1))
+        # self.assertEqual(len(o.solutions),2)
+        # self.assertEqual(o.solutions[0][1], scnl1)
+        # '''should insert at end'''
+        # o.insertDetection((5,scnl3))
+        # print(o.solutions)
+        # self.assertEqual(len(o.solutions),3)
+        # self.assertEqual(o.solutions[2][1], scnl3)
 
 if __name__ == '__main__':
     unittest.main()
