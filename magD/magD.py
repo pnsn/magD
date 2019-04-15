@@ -29,7 +29,7 @@ from .scnl import Scnl
 '''
 
 
-class MapGrid:
+class MagD:
 
     def __init__(self, type, name, resolution, lat_min, lat_max, lon_min,
                  lon_max, num_solutions, nyquist_correction, mu, qconst, beta,

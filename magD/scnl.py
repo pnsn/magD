@@ -25,7 +25,7 @@ class Scnl(Location):
         self.base = None
         self.freq0 = None
         self.df = None
-        # FIXME: Power Should be a class
+        # FIXME: Power Should be a class?
         self.powers = []
         self.frequencies = []
         self.contrib_solutions = 0  # how many times sta contributed 2 solution
