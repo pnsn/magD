@@ -73,7 +73,7 @@ def geometric_spreading(delta):
 
 def amplitude(fc, Mo, cn, delta, filtfc):
     '''use Brune model to compute aplitude
-
+    
      amp=cn*m0*filtfc[i]*pow(fc,2)/  (pow(filtfc[i],2)+pow(fc,2)) /distkm[i];
     '''
     fc2 = math.pow(fc, 2)
