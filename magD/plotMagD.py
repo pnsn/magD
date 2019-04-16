@@ -13,22 +13,20 @@ from mpl_toolkits.basemap import Basemap
 import numpy as np
 import datetime
 
-# from .mapGrid import MapGrid
-
 
 class PlotMagD():
-    def __init__(self, mapGrid):
-        self.mapGrid = mapGrid
+    def __init__(self, magD):
+        self.magD = magD
 
     def plot(self):
         return plt
 
     def map_center(self):
         '''returns center of map based on config min/max'''
-        lat = 0.5 * (self.mapGrid.lat_max - self.mapGrid.lat_min) + \
-            self.mapGrid.lat_min
-        lon = 0.5 * (self.mapGrid.lon_max - self.mapGrid.lon_min) + \
-            self.mapGrid.lon_min
+        lat = 0.5 * (self.magD.lat_max - self.magD.lat_min) + \
+            self.magD.lat_min
+        lon = 0.5 * (self.magD.lon_max - self.magD.lon_min) + \
+            self.magD.lon_min
         return lat, lon
 
     def basemap(self, bounds, projection='merc'):
@@ -40,8 +38,8 @@ class PlotMagD():
 
     def project_x_y(self, map):
         '''project x,y onto map coordinates returns x,y projected coords '''
-        return map(*np.meshgrid(self.mapGrid.lon_list(),
-                   self.mapGrid.lat_list()))
+        return map(*np.meshgrid(self.magD.lon_list(),
+                   self.magD.lat_list()))
 
     def meridian_interval(self, lon_min, lon_max):
         return np.linspace(lon_min, lon_max, 4, dtype=int)
@@ -51,7 +49,7 @@ class PlotMagD():
 
     def outfile_with_stamp(self, path):
         '''create unique path for outfile'''
-        return "{}{}-{}-{}.png".format(path, self.mapGrid.name,
+        return "{}{}-{}-{}.png".format(path, self.magD.name,
                                        datetime.datetime.now()
                                        .strftime("%Y%m%d%H%M%S"),
-                                       self.mapGrid.type)
+                                       self.magD.type)

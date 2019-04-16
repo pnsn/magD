@@ -2,7 +2,7 @@ import unittest
 import magD.seis as seis
 
 import math
-import fixtures.seis_data as seis_data
+# import fixtures.seis_data as seis_data
 from magD.origin import Origin
 
 
@@ -59,8 +59,8 @@ class TestSeis(unittest.TestCase):
     #     Mo = 2.29 * 100000000 * math.pow((1e5 * fault_radius), 3)
     #     # checks to see if the method computes the correct amplitude.
     #
-    #     self.assertEqual(amplitude, self.compute_amplitude(fc, Mo, cn, filtfc,
-    #                      delta, station_freq, nyquist))
+    #     self.assertEqual(amplitude, self.compute_amplitude(fc, Mo, cn,
+    #                       filtfc, delta, station_freq, nyquist))
 
     # def test_compute_attenuation(self, delta):
     #     q = 640.0*math.pow(15,0.35) #Q value

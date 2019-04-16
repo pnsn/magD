@@ -73,7 +73,7 @@ def geometric_spreading(delta):
 
 def amplitude(fc, Mo, cn, delta, filtfc):
     '''use Brune model to compute aplitude
-    
+
      amp=cn*m0*filtfc[i]*pow(fc,2)/  (pow(filtfc[i],2)+pow(fc,2)) /distkm[i];
     '''
     fc2 = math.pow(fc, 2)
@@ -191,7 +191,7 @@ def focal_distance(epi_distance, depth):
 
 
 def trigger_time(epi_distance, velocity_p, processing_time, depth):
-    '''for given epi dinstance calculate focal distance
+    '''for given epi distance calculate focal distance
 
        use velocity of p and processing time to determine trigger time
     '''

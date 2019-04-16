@@ -15,10 +15,10 @@ attrs:
 
 
 class Origin:
-    def __init__(self, lat, lon, solutions=[]):
+    def __init__(self, lat, lon):
         self._lat = lat
         self._lon = lon
-        self.solutions = solutions
+        self.solutions = []
 
     @property
     def lat(self):
@@ -36,7 +36,7 @@ class Origin:
     def lon(self, value):
         self._lon = value
 
-    def add_to_solutions(self, solution):
+    def append_to_solutions(self, solution):
         self.solutions.append(solution)
 
     def sort_and_truncate_solutions(self, num_solutions):

@@ -449,11 +449,13 @@ class MagD:
         for origin in self.origins:
             if lat != origin.lat and origin.lat % 2.0 == 0.0:
                 lat = origin.lat
+                print(lat)
             # for every scnl
             for key in self.markers:
                 for d in self.markers[key]['collection']:
                     delta_rad, delta_km = find_distance(origin, d)  # km
-                    origin.solutions.append(Solution(d, delta_km))
+                    origin.append_to_solutions(Solution(d, delta_km))
+
             origin.sort_and_truncate_solutions(self.num_solutions)
         # if this is a single point, keep the first n solutions
         # for better plotting
