@@ -32,8 +32,9 @@ from .scnl import Scnl
 class MagD:
 
     def __init__(self, type, name, resolution, lat_min, lat_max, lon_min,
-                 lon_max, num_solutions, nyquist_correction, mu, qconst, beta,
-                 pickle_root):
+                 lon_max, num_solutions, pickle_root, nyquist_correction=None,
+                 mu=None, qconst=None, beta=None,
+                 ):
         self.type = type
         self.name = name
         self.resolution = resolution
@@ -161,21 +162,6 @@ class MagD:
     '''pickle to object'''
     def save(self):
         set_pickle(self.get_path(), self)
-
-    # def get_no_solution_index(self, key):
-    #     '''Assumes sorted! Find the index  where Scnls did not contribute.
-    #
-    #     Find where # of solutions ==0, everything to the right of that
-    #     will be 0 if sorted
-    #     '''
-    #     i = 0
-    #     for scnl in self.markers[key]['collection']:
-    #         if scnl.contrib_solutions > 0:
-    #             i += 1
-    #             next
-    #         else:
-    #             break
-    #     return i
 
     def build_matrix(self):
         '''create and pickle map_grids'''
@@ -445,18 +431,20 @@ class MagD:
         Does NOT consider site characteristics such as noise.
         '''
         print('Profiling spatially...')
-        lat = self.origins[0].lat
+        lat = None
+        print("lat: ", end="")
         for origin in self.origins:
-            if lat != origin.lat and origin.lat % 2.0 == 0.0:
+            if lat != origin.lat or lat is None:
                 lat = origin.lat
-                print(lat)
-            # for every scnl
+                # rounding needed since float percision is off
+                if round(lat % 1.0, 1) == 0.0:
+                    print(str(lat) + ", ", end="")
             for key in self.markers:
                 for d in self.markers[key]['collection']:
                     delta_rad, delta_km = find_distance(origin, d)  # km
                     origin.append_to_solutions(Solution(d, delta_km))
-
-            origin.sort_and_truncate_solutions(self.num_solutions)
+            if len(origin.solutions) > 1:  # case for event object
+                origin.sort_and_truncate_solutions(self.num_solutions)
         # if this is a single point, keep the first n solutions
         # for better plotting
         if len(self.origins) == 1:
