@@ -40,9 +40,24 @@ class Origin:
         self.solutions.append(solution)
 
     def sort_and_truncate_solutions(self, num_solutions):
-        '''sort then keep only first num_solutions'''
+        '''sort then keep only first num_solutions
+
+            first ensure unique data sets, e.g. we don't
+            want to use both instruments in a 6 channel station
+            when duplicates exist, remove larger value
+        '''
         self.solutions.sort(key=lambda s: s.value)
-        self.solutions = self.solutions[0:num_solutions]
+        # print([x.value for x in self.solutions])
+        uniq_list = [self.solutions[0]]
+        for s in self.solutions:
+            found = False
+            for u in uniq_list:
+                if s.obj.sta == u.obj.sta:
+                    found = True
+            if not found:
+                uniq_list.append(s)
+        # print([x.value for x in uniq_list])
+        self.solutions = uniq_list[0:num_solutions]
 
     def increment_solutions(self, num_stas):
         '''increment the solutions object

@@ -86,7 +86,7 @@ class TestMagD(unittest.TestCase):
 
     '''
 
-    def test_spatial_distance(self):
+    def test_profile_spatially(self):
         print("aren't you  spatial")
         m_dist = self.m_dist
         # set one origin to a known cords of station 1001
