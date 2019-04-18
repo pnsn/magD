@@ -200,6 +200,7 @@ class MagD:
                              'label': marker label,
                              'symbol': marker symbol,
                              'size': marker size,
+                             'unit': unit of measurement
                              'template_sta': proxy_sta,
                              'template_chan': proxy_chan,
                              'template_net': proxy_net,
@@ -232,6 +233,8 @@ class MagD:
             self.markers[key]['symbol'] = src['symbol']
             self.markers[key]['label'] = src['label']
             self.markers[key]['size'] = src['size']
+            if 'unit' in src:
+                self.markers[key]['unit'] = src['unit']
             if 'starttime' in src and 'endtime' in src:
                 self.markers[key]['starttime'] = src['starttime']
                 self.markers[key]['endtime'] = src['endtime']
