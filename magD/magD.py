@@ -1,7 +1,5 @@
 '''
-MapGrid is a matrix for contouring with other attributes.
-It is instantiated with a conf file, and a 'type'
-conf file is of form:
+MagD is a matrix for contouring with other attributes.
 
 These are saved as a pickled file
 
@@ -33,7 +31,7 @@ class MagD:
 
     def __init__(self, type, name, resolution, lat_min, lat_max, lon_min,
                  lon_max, num_solutions, pickle_root, nyquist_correction=None,
-                 mu=None, qconst=None, beta=None,
+                 mu=None, qconst=None, beta=None, save_mag_curve=False
                  ):
         self.type = type
         self.name = name
@@ -52,6 +50,7 @@ class MagD:
         self.markers = {}
         self.origins = []
         self.firstn_solutions = []
+        self.save_mag_curve = save_mag_curve
 
     def build_origins(self):
         for lat in self.lat_list():
@@ -141,6 +140,15 @@ class MagD:
                 epi_distance = m[r][c]
                 fd = focal_distance(epi_distance, depth)
                 m[r][c] = fd / velocity_s
+
+    def transform_to_azmuthul_gap(self, solutions=True):
+        '''transform the matrix to AZ gap but iterating though each origin
+
+        if solutions =True use the origins solutions i.e. the stations that
+        contributed to the origins solution, if false, then use all available
+        stations
+        '''
+        pass
 
     def copy(self, type, name=None):
         '''pass in name and type. type is pickle folder, type is filename
@@ -401,7 +409,7 @@ class MagD:
                             fault_rad = fault_radius(fc, self.beta)
                             Mo = moment(fault_rad)
                             Mw = round(moment_magnitude(Mo), 2)
-                            filtfc = signal_adjusted_frequency(Mw, fc)
+                            filtfc = signal_adjusted_frequency(Mw, delta_rad)
                             nyquist = scnl.samprate * self.nyquist_correction
 
                             if filtfc >= nyquist:
@@ -418,10 +426,28 @@ class MagD:
                             # calculation normalization
                             As /= 6.0
                             db = amplitude_power_conversion(As)
-                            detection = min_detect(scnl, db, Mw, filtfc)
-                            if(detection):
-                                origin.solutions.append(Solution(scnl, Mw))
-                                break
+                            # used to plot a specific PDF with mag_curves
+                            # we only need a small samples so use mod to filter
+                            # on 0.5 mag and deg
+                            # print(delta_km)
+                            if self.save_mag_curve:
+
+                                # deg = round(delta_rad * (180 / math.pi), 1)
+
+                                Mw = round(Mw, 1)
+                                km = round(delta_km)
+                                if km % 10 == 0 and Mw % 0.5 == 0:
+                                    # use fc instead of instrument corrected
+                                    # freq
+                                    origin.append_to_mag_curve(Mw, fc, db, km)
+                                if Mw > 3.0:  # we don't need to go beyond this
+                                    origin.solutions.append(Solution(scnl, Mw))
+                                    break
+                            else:
+                                detection = min_detect(scnl, db, Mw, filtfc)
+                                if(detection):
+                                    origin.solutions.append(Solution(scnl, Mw))
+                                    break
 
                             period = period * (2 ** 0.125)
             # since we are considering detection, sort by mag asc

@@ -19,6 +19,7 @@ class Origin:
         self._lat = lat
         self._lon = lon
         self.solutions = []
+        self.mag_curve = {}
 
     @property
     def lat(self):
@@ -35,6 +36,23 @@ class Origin:
     @lon.setter
     def lon(self, value):
         self._lon = value
+
+    def append_to_mag_curve(self, mag, fc, pow, km):
+        '''to plot mag curves on pdf
+
+           create a stucture keyed on deg
+           {
+            mag: {
+                    period: float,
+                    pow: float
+                }
+           }
+        '''
+        if km not in self.mag_curve:
+            self.mag_curve[km] = {}
+        self.mag_curve[km][mag] = {}
+        self.mag_curve[km][mag]['period'] = 1 / fc
+        self.mag_curve[km][mag]['pow'] = pow
 
     def append_to_solutions(self, solution):
         self.solutions.append(solution)

@@ -1,4 +1,4 @@
-sta,net,chan,location,lat,lon,rate
+lsta,net,chan,location,lat,lon,rate
 1003,HHZ,UW,--,46.771,-124.081,100
 1218,HHZ,UW,--,47.33,-123.791,100
 1002,HHZ,UW,--,46.492,-124.049,100
