@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="MagD",
-    version="2.0",
+    version="2.0.1",
     author="Jon Connolly",
     author_email="joncon@uw.edu",
     description="A map based packaged to analyze seimic network perfromance",
