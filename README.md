@@ -29,3 +29,20 @@ Basemap is the mapping library for matplotlib. It needs to be built against geos
 `conda install -c anaconda basemap`
 
 `conda install basemap-data-hires`
+
+## Pofiles
+### Magnitude thresholds
+Magnitude thresholds use noise PSD's from IRIS https://service.iris.edu/mustang/noise-psd/1/
+
+The noise at the local station is used to determine the smallest magnitude it can detect for a given origin. For each origin(lat/lon) every station in the set in analyzed, the sorted by magnitude form smallest to highest. The origin is then contoured by the nth (num_stations) smallest magnitude.
+
+### Density
+The station density is plotted for each origin and contours by distance to the nth (num_stas) closest station
+
+### Warning Time
+The map is contoured by Alert time - S wave arrival time where alert time is p-wave arrival at nth station + processing time)
+
+### Blindzone 
+The size of the EEW blindzone for a given area
+
+
