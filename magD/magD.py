@@ -95,13 +95,13 @@ class MagD:
     def max(self):
         np.max(self.matrix)
 
-    '''
-        Take distance matrix
-        calc blindzone distances in km
-        which is just uses pythagoreon theorem:
-            Xbz=((focal_distance*vs/vp)^2 -depth^2)^1/2
-    '''
     def transform_to_blindzone(self, velocity_p, velocity_s, depth):
+        '''Calculate blindzone radius for each origin
+
+            calc blindzone distances in km
+            which is just uses pythagoreon theorem:
+                Xbz=((focal_distance*vs/vp)^2 -depth^2)^1/2
+        '''
         m = self.matrix
         for r in range(len(m)):
             for c in range(len(m[r])):
@@ -114,13 +114,13 @@ class MagD:
                 else:
                     m[r][c] = math.sqrt(vd2 - d2)
 
-    '''Time to trigger.
-
-    For every origin calculate the time to trigger using the distance matrix.
-    Calculate distance to focus convert to time using p velocity then add
-    processing time
-    '''
     def transform_to_trigger_time(self, velocity_p, processing_time, depth):
+        '''For each origin in grid (event at depth), calculate how long it
+
+        takes for p-wave to reach 4th station
+        Input: distance matrix
+        output: time(s) matrix
+        '''
         m = self.matrix
         for r in range(len(m)):
             for c in range(len(m[r])):
@@ -130,9 +130,12 @@ class MagD:
                 m[r][c] = tt
 
     def transform_to_s_travel_time(self, velocity_s, depth):
-        '''Same as trigger time but subtract from s arrival to determine
+        '''For all origins use matrix, which is epi-distance from event
 
-        alert time. Transform form distance matrix
+        and calculate s-arrival to that origin. Will be concentric circles
+        around event.
+        Input: Distance matrix
+        Output: Time(s) matrix
         '''
         m = self.matrix
         for r in range(len(m)):
