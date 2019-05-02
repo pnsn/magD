@@ -1,7 +1,8 @@
 # magD
-
 A routine for looking at magnitude detection thresholds using noise pdfs and
 the Brune model, written by Dan McNamara in C and ported to python
+
+[![PyPI version](https://badge.fury.io/py/MagD.svg)](https://badge.fury.io/py/MagD)
 
 magD has been tested on python 3.5 and greater
 
