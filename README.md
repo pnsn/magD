@@ -10,26 +10,12 @@ MagD allows an end user to evaluate seismograph performance at the network level
 
 ## Client
 
-An example client repo is at https://github.com/pnsn/magd_client refer to this repo for details
+An example client repo is at https://github.com/pnsn/magd_client refer to this repo for examples
 
 
 ## Installation
+pip install magD
 
-### Basemap
-
-Basemap is the mapping library for matplotlib. It needs to be built against geos.
-
-### OSX
-
-`brew install geos`
-
-`brew install proj`
-
-`pip install obspy`
-
-`conda install -c anaconda basemap`
-
-`conda install basemap-data-hires`
 
 ## Pofiles
 ### Magnitude thresholds
