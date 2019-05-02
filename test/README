@@ -1,0 +1,6 @@
+To run all tests. From app root:
+python -m unittest discover test
+To run 1 test file:
+python test/test_wow.py
+To run a single unittest
+python test/test_wow.py Wow.test_name
