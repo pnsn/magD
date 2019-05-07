@@ -1,9 +1,3 @@
-'''
-MagD is a matrix for contouring with other attributes.
-
-These are saved as a pickled file
-
-'''
 import numpy as np
 import math
 import copy
@@ -21,13 +15,14 @@ from .event import Event
 from .scnl import Scnl
 
 
-'''
-    init:
-
-'''
-
-
 class MagD:
+    '''Creates object plotting seismic station metrics
+
+        MagD creates an object than can be pickled
+        and saved to local file system. The object not only describes a grid
+        to contour but also describes the data used for each solution in the
+        grid, station, magnitude, and map attributes such as icon and color
+    '''
 
     def __init__(self, type, name, resolution, lat_min, lat_max, lon_min,
                  lon_max, num_solutions, pickle_root, nyquist_correction=None,

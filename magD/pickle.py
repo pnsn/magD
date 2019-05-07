@@ -2,6 +2,8 @@ import pickle
 import re
 from pathlib import Path
 
+'''Functions to manage pickling and unpickling of magD objects'''
+
 
 def set_pickle(path, data):
     '''set pickle path of object if it doesn't exist'''
@@ -12,6 +14,7 @@ def set_pickle(path, data):
 
 
 def get_pickle(path):
+    '''retrieve pickle for filesystem'''
     try:
         with open(path, 'rb') as p:
             return pickle.load(p)
@@ -27,5 +30,6 @@ def get_grid_path(root_path, type, name, numrows, numcols, resolution):
 
 
 def get_noise_path(root_path, dir, sta, chan, net, loc, start, end):
+    '''return noise path'''
     return "{}/{}/{}_{}_{}_{}_{}_{}.pickle".format(root_path, dir, sta, chan,
                                                    net, loc, start, end)

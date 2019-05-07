@@ -1,14 +1,32 @@
-'''class for managing channel data (scnls)
-
-'''
 import math
 from .location import Location
 
 
 class Scnl(Location):
+    '''class for managing channel data (scnls)
+
+        Attributes:
+            args:
+                sta: (string) ANSS 3-4 character station name
+                chan: (string)ANSS 3 character channel name
+                loc: (string)ANSS 2 character location name
+                net: (string)ANSS 2 character network name
+                samprate: (int) digitizer samples/sec
+                lat: (float) latitude of station
+                lon: (float) longitude of station
+                depth: (float) depth of station
+                proxy_scnl: points to proxy scnl for noise.
+                    (for evaluating proposed site)
+            calculated/collections
+                base: (float) log base of frequency index for list indexing
+                freq0: (float) starting frequecy for list indexing
+                powers: (floats) list of powers form PDF
+                frequecies: (floats) list of frequecies from PDF
+                contrib_solutions: (int) how many times sta contributed to any
+                    solution
+    '''
     def __init__(self, sta, chan, net, loc, samprate=None, lat=None, lon=None,
-                 depth=None, data_set=None, inst_id=None, desc=None,
-                 proxy_scnl=None):
+                 depth=None, inst_id=None, desc=None, proxy_scnl=None):
         self.sta = sta
         self.chan = chan
         self.net = net
@@ -17,14 +35,10 @@ class Scnl(Location):
         self.lat = lat
         self.lon = lon
         self.depth = depth
-        self.data_set = data_set
-        self.inst_id = inst_id
-        self.desc = desc
         # are we using another scnl as a proxy for noise
         self.proxy_scnl = proxy_scnl
         self.base = None
         self.freq0 = None
-        self.df = None
         # FIXME: Power Should be a class?
         self.powers = []
         self.frequencies = []
