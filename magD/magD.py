@@ -139,14 +139,18 @@ class MagD:
                 fd = focal_distance(epi_distance, depth)
                 m[r][c] = fd / velocity_s
 
-    def transform_to_azmuthul_gap(self, solutions=True):
+    def transform_to_azmuthul_gap(self):
         '''transform the matrix to AZ gap but iterating though each origin
 
-        if solutions =True use the origins solutions i.e. the stations that
-        contributed to the origins solution, if false, then use all available
-        stations
+        Considers only channels that are part of solution
         '''
         pass
+        # m = self.matrix
+        # for r in range(len(m)):
+        #     for c in range(len(m[r])):
+        #         epi_distance = m[r][c]
+        #         # az =
+        #         m[r][c] = azimuthal_gap(self.origins)
 
     def copy(self, type, name=None):
         '''pass in name and type. type is pickle folder, type is filename
@@ -278,7 +282,7 @@ class MagD:
                         row.depth = 0
                     scnl = Scnl(row.sta, row.chan, row.net, row.location,
                                 row.rate, row.lat, row.lon, row.depth, key,
-                                None, None, proxy_scnl)
+                                proxy_scnl)
 
                     self.markers[key]['collection'].append(scnl)
 

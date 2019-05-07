@@ -26,7 +26,7 @@ class Scnl(Location):
                     solution
     '''
     def __init__(self, sta, chan, net, loc, samprate=None, lat=None, lon=None,
-                 depth=None, inst_id=None, desc=None, proxy_scnl=None):
+                 depth=None, desc=None, proxy_scnl=None):
         self.sta = sta
         self.chan = chan
         self.net = net
