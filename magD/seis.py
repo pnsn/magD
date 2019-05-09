@@ -164,6 +164,8 @@ def min_detect(scnl, db, Mw, freq):
 '''
 
 
+# FIXME: Although this is passing unit tests
+# the output looks fishy
 def azimuthal_gap(scnls, source):
     gaps = []
     # larger than earth's circumference
@@ -178,6 +180,7 @@ def azimuthal_gap(scnls, source):
     gaps.sort(reverse=True)
     # prepend last az + 360 to list
     gaps.insert(0, gaps[-1] + 360)
+
     for i in range(len(gaps) - 1):
         gap = gaps[i] - gaps[i + 1]
         if gap > max_gap:

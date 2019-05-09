@@ -144,13 +144,15 @@ class MagD:
 
         Considers only channels that are part of solution
         '''
-        pass
-        # m = self.matrix
-        # for r in range(len(m)):
-        #     for c in range(len(m[r])):
-        #         epi_distance = m[r][c]
-        #         # az =
-        #         m[r][c] = azimuthal_gap(self.origins)
+        m = self.matrix
+        for r in range(len(m)):
+            for c in range(len(m[r])):
+                # find the origin index associated with this element
+                origin = self.origins[(r * c) + c]
+                scnls = [solution.obj for solution in origin.solutions]
+                # we don't give a crap about distance or mag
+                # i.e. that value at m[r][c] just clobber with az gap
+                m[r][c] = azimuthal_gap(scnls, origin)
 
     def copy(self, type, name=None):
         '''pass in name and type. type is pickle folder, type is filename
