@@ -387,7 +387,6 @@ class MagD:
         '''
         print('Profiling by noise...')
         lat = None
-        print("lat: ", end="")
         for origin in self.origins:
             if lat != origin.lat or lat is None:
                 lat = origin.lat
