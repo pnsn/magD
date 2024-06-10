@@ -24,7 +24,7 @@ where code is HTTP response, 2dim list contains:
 
 def get_fdsn(sta_string, chan_string, net_string, loc_string="--"):
     stations = []
-    url = "http://service.iris.edu/fdsnws/station/1/query?net=" + \
+    url = "https://service.iris.edu/fdsnws/station/1/query?net=" + \
           net_string + "&sta=" + sta_string + "&loc=" + loc_string + \
           "&cha=" + chan_string + \
           "&level=channel&format=xml&includecomments=true&nodata=404"
@@ -101,7 +101,7 @@ def get_fdsn(sta_string, chan_string, net_string, loc_string="--"):
 def get_noise_pdf(sta, chan, net, loc, starttime, endtime):
     if loc is None or loc == "":
         loc = "--"
-    url = "http://service.iris.edu/mustang/noise-pdf/1/query?"\
+    url = "https://service.iris.edu/mustang/noise-pdf/1/query?"\
         "net={}&sta={}&loc={}&cha={}""&quality=M&format=xml"\
         "&starttime={}&endtime={}".format(net, sta, loc, chan, starttime,
                                           endtime)
